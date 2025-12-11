@@ -8,6 +8,8 @@ urlpatterns = [
     # Djoser Auth URLs
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
+    path('api/', include('market.urls')),  # Include market app URLs
+    path('api-auth/', include('rest_framework.urls')),  # DRF login/logout
 ]
 
 # This allows us to see images during development
