@@ -12,10 +12,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only_fields = ['reviewer']
 
     def validate(self, data):
-        # Check: Is the user trying to review themselves?
-        # Note: We access the user from the context request because 'reviewer' isn't saved yet
-        user = self.context['request'].user
-        if data['seller'] == user:
+        request = self.context.get('request')
+        user = request.user
+        seller = data['seller']
+
+        # Check 1: Self-review
+        if seller == user:
             raise serializers.ValidationError(
                 "You cannot review your own profile.")
+
+        # Check 2: Duplicate Review (The Fix for your Error)
+        # Check if this user has already reviewed this seller
+        # We use .exists() which is very fast
+        if Review.objects.filter(reviewer=user, seller=seller).exists():
+            raise serializers.ValidationError(
+                "You have already reviewed this seller.")
+
         return data

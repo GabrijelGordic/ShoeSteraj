@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/', include('market.urls')),  # Include market app URLs
     path('api-auth/', include('rest_framework.urls')),  # DRF login/logout
     path('api/', include('reviews.urls')),  # Include reviews app URLs
+    path('api/', include('users.urls')),  # Include users app URLs
 ]
 
 # This allows us to see images during development
