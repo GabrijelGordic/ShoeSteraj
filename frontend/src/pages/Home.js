@@ -6,145 +6,241 @@ const Home = () => {
   const [shoes, setShoes] = useState([]);
   const [search, setSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Function to fetch shoes with filters
   const fetchShoes = () => {
-    // Build the query string: /api/shoes/?search=Nike&brand=Adidas
     let query = '/api/shoes/?';
     if (search) query += `search=${search}&`;
     if (brandFilter) query += `brand=${brandFilter}&`;
 
     api.get(query)
-      .then(res => setShoes(res.data))
-      .catch(err => console.error(err));
+      .then(res => {
+        setShoes(res.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   };
 
-  // Fetch initial data
   useEffect(() => {
     fetchShoes();
     // eslint-disable-next-line
-  }, []); // Run once on load
+  }, []);
 
-  // Handle Search Submit
   const handleSearch = (e) => {
     e.preventDefault();
     fetchShoes();
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ backgroundColor: '#FCFCFC', minHeight: '100vh', paddingBottom: '100px' }}>
       
-      {/* Search Bar Section */}
-      <div style={searchBarStyle}>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '600px' }}>
-            <input 
-                type="text" 
-                placeholder="Search kicks..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={inputStyle}
-            />
-            <select 
-                value={brandFilter} 
-                onChange={(e) => setBrandFilter(e.target.value)}
-                style={selectStyle}
-            >
-                <option value="">All Brands</option>
-                <option value="Nike">Nike</option>
-                <option value="Adidas">Adidas</option>
-                <option value="Jordan">Jordan</option>
-                <option value="New Balance">New Balance</option>
-                <option value="Yeezy">Yeezy</option>
-            </select>
-            <button type="submit" style={btnStyle}>Search</button>
-            
-            {/* Clear Button */}
-            {(search || brandFilter) && (
-                <button 
-                    type="button" 
-                    onClick={() => { setSearch(''); setBrandFilter(''); window.location.reload(); }}
-                    style={{...btnStyle, background: '#666'}}
+      {/* --- HEADER SECTION --- */}
+      <div style={{ textAlign: 'center', padding: '60px 20px 40px' }}>
+        <h1 style={{ 
+            fontFamily: '"Playfair Display", serif', 
+            fontSize: '3.5rem', 
+            margin: '0 0 20px 0', 
+            color: '#111' 
+        }}>
+            Curated Collection
+        </h1>
+        <p style={{ fontFamily: '"Lato", sans-serif', color: '#666', maxWidth: '600px', margin: '0 auto 40px', lineHeight: '1.6' }}>
+            Discover exclusive footwear from verified sellers. <br/>Authentic style, curated for you.
+        </p>
+
+        {/* --- FILTER BAR --- */}
+        <div style={filterBarStyles}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
+                <input 
+                    type="text" 
+                    placeholder="Search..." 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    style={minimalInput}
+                />
+                <select 
+                    value={brandFilter} 
+                    onChange={(e) => setBrandFilter(e.target.value)}
+                    style={minimalSelect}
                 >
-                    Clear
-                </button>
-            )}
-        </form>
+                    <option value="">All Designers</option>
+                    <option value="Nike">Nike</option>
+                    <option value="Adidas">Adidas</option>
+                    <option value="Jordan">Jordan</option>
+                    <option value="Yeezy">Yeezy</option>
+                    <option value="New Balance">New Balance</option>
+                </select>
+                <button type="submit" style={minimalButton}>Filter</button>
+            </form>
+        </div>
       </div>
 
-      <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>Latest Kicks</h1>
-      
-      {/* Grid Section (Same as before) */}
-      <div style={gridStyle}>
-        {shoes.length > 0 ? shoes.map(shoe => (
-          <div key={shoe.id} style={cardStyle}>
-            <Link to={`/shoes/${shoe.id}`} style={{ display: 'block' }}>
-                <img src={shoe.image} alt={shoe.title} style={imageStyle} />
-            </Link>
-            <div style={{ padding: '15px' }}>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>
-                    <Link to={`/shoes/${shoe.id}`} style={{ textDecoration: 'none', color: '#333' }}>
-                        {shoe.title}
-                    </Link>
-                </h3>
-                <p style={{ margin: '5px 0', color: '#666', fontSize: '0.9rem' }}>
-                    {shoe.brand} | Size: {shoe.size}
-                </p>
-                <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#888' }}>
-                    Seller: <Link to={`/seller/${shoe.seller_username}`} style={{ color: '#007bff', fontWeight: 'bold', textDecoration: 'none' }}>
-                        {shoe.seller_username}
-                    </Link>
-                </p>
-                <div style={{ marginTop: '15px' }}>
-                    <h4 style={{ margin: '0', color: 'green', fontSize: '1.1rem' }}>${shoe.price}</h4>
-                </div>
+      {/* --- PRODUCT GRID --- */}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
+        {loading ? (
+            <p style={{textAlign:'center', fontFamily:'Lato'}}>Loading collection...</p>
+        ) : (
+            <div style={gridStyle}>
+                {shoes.length > 0 ? shoes.map((shoe, index) => (
+                    <div key={shoe.id} className="product-card" style={{animationDelay: `${index * 0.1}s`}}>
+                        
+                        <Link to={`/shoes/${shoe.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+                            {/* Image Container */}
+                            <div style={imageContainerStyle}>
+                                {/* FIXED: Added className="product-image" directly here */}
+                                <img 
+                                    src={shoe.image} 
+                                    alt={shoe.title} 
+                                    style={imageStyle} 
+                                    className="product-image" 
+                                />
+                            </div>
+                            
+                            {/* Product Details */}
+                            <div style={{ padding: '20px 0', textAlign: 'center' }}>
+                                <p style={brandStyle}>{shoe.brand}</p>
+                                <h3 style={titleStyle}>{shoe.title}</h3>
+                                <p style={priceStyle}>${shoe.price}</p>
+                                
+                                <p style={sellerStyle}>
+                                    Sold by {shoe.seller_username}
+                                </p>
+                            </div>
+                        </Link>
+                    </div>
+                )) : (
+                    <p style={{gridColumn: '1/-1', textAlign:'center', color:'#888'}}>No results found.</p>
+                )}
             </div>
-          </div>
-        )) : (
-            <p style={{ textAlign: 'center', gridColumn: '1/-1', fontSize: '1.2rem', color: '#888' }}>
-                No shoes found. Try a different search.
-            </p>
         )}
       </div>
+
+      {/* --- CSS ANIMATIONS & HOVER EFFECTS --- */}
+      <style>{`
+        body { font-family: 'Lato', sans-serif; }
+        
+        /* Fade In Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .product-card {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+            transition: transform 0.4s ease;
+            cursor: pointer;
+        }
+
+        /* --- THE HOVER EFFECT --- */
+        /* When hovering the card, target the image inside */
+        .product-card:hover .product-image {
+            transform: scale(1.05); /* Slight enlargement */
+        }
+      `}</style>
     </div>
   );
 };
 
-// Styles
-const searchBarStyle = {
-    display: 'flex', 
-    justifyContent: 'center', 
-    marginBottom: '40px',
-    padding: '20px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '8px'
+// --- STYLES ---
+
+const filterBarStyles = {
+    borderTop: '1px solid #eee',
+    borderBottom: '1px solid #eee',
+    padding: '20px 0',
+    maxWidth: '800px',
+    margin: '0 auto'
 };
 
-const inputStyle = {
-    flex: 2, padding: '10px', borderRadius: '4px', border: '1px solid #ccc'
+const minimalInput = {
+    border: 'none',
+    borderBottom: '1px solid #ccc',
+    padding: '10px',
+    width: '200px',
+    outline: 'none',
+    fontFamily: '"Lato", sans-serif',
+    fontSize: '0.9rem',
+    backgroundColor: 'transparent'
 };
-const selectStyle = {
-    flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc'
+
+const minimalSelect = {
+    border: 'none',
+    borderBottom: '1px solid #ccc',
+    padding: '10px',
+    width: '150px',
+    outline: 'none',
+    fontFamily: '"Lato", sans-serif',
+    fontSize: '0.9rem',
+    backgroundColor: 'transparent',
+    cursor: 'pointer'
 };
-const btnStyle = {
-    padding: '10px 20px', background: '#333', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'
+
+const minimalButton = {
+    background: '#111',
+    color: '#fff',
+    border: 'none',
+    padding: '10px 25px',
+    fontFamily: '"Lato", sans-serif',
+    fontSize: '0.8rem',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    cursor: 'pointer'
 };
 
 const gridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-  gap: '30px',
-  marginTop: '20px'
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '60px 40px',
 };
-const cardStyle = {
-  border: '1px solid #e0e0e0',
-  borderRadius: '12px',
-  overflow: 'hidden',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-  backgroundColor: 'white',
-  transition: 'transform 0.2s',
+
+const imageContainerStyle = {
+    overflow: 'hidden', // Key logic: Hides the parts of the image that grow outside the box
+    backgroundColor: '#fff',
+    aspectRatio: '1 / 1.2', 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
 };
+
 const imageStyle = {
-    width: '100%', height: '250px', objectFit: 'cover', cursor: 'pointer', borderBottom: '1px solid #eee'
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    transition: 'transform 0.5s ease', // Makes the zoom smooth
+};
+
+const brandStyle = {
+    margin: '0 0 5px',
+    color: '#999',
+    fontSize: '0.75rem',
+    textTransform: 'uppercase',
+    letterSpacing: '2px',
+    fontWeight: '700'
+};
+
+const titleStyle = {
+    margin: '0 0 10px',
+    fontFamily: '"Playfair Display", serif',
+    fontSize: '1.4rem',
+    fontWeight: '400',
+    color: '#111'
+};
+
+const priceStyle = {
+    margin: '0',
+    fontFamily: '"Lato", sans-serif',
+    fontSize: '1rem',
+    fontWeight: '300',
+    color: '#333'
+};
+
+const sellerStyle = {
+    margin: '15px 0 0',
+    fontSize: '0.8rem',
+    color: '#aaa',
+    fontStyle: 'italic'
 };
 
 export default Home;

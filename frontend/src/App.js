@@ -10,6 +10,9 @@ import SellerProfile from './pages/SellerProfile';
 import EditProfile from './pages/EditProfile';
 import MyListings from './pages/MyListings';
 import ShoeDetail from './pages/ShoeDetail'; 
+import ForgotPassword from './pages/ForgotPassword'; 
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm'; 
+
 
 function App() {
   return (
@@ -24,7 +27,9 @@ function App() {
           <Route path="/seller/:username" element={<SellerProfile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/mylistings" element={<MyListings />} />
-        <Route path="/shoes/:id" element={<ShoeDetail />} />
+          <Route path="/shoes/:id" element={<ShoeDetail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/password-reset/confirm/:uid/:token" element={<ResetPasswordConfirm />} />
         </Routes>
       </AuthProvider>
     </Router>

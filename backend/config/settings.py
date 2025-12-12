@@ -157,5 +157,20 @@ REST_FRAMEWORK = {
 
 # Djoser Settings (Optional: Cleaner URLS)
 DJOSER = {
-    'USER_ID_FIELD': 'username'
+    'USER_ID_FIELD': 'username',
+    'LOGIN_FIELD': 'username',
+    # This tells Djoser: "When sending the email, construct the link like localhost:3000/..."
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False,
+    'SERIALIZERS': {},
 }
+
+# Email Configuration (Development Mode)
+# This sends emails to your terminal/console instead of the real internet
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_USE_TLS = False
+DEFAULT_FROM_EMAIL = 'ShoeSteraj <noreply@shoesteraj.com>'

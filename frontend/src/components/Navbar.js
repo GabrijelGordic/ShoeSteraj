@@ -7,66 +7,111 @@ const Navbar = () => {
 
   return (
     <nav style={styles.nav}>
-      <div style={styles.logo}>
-        <Link to="/" style={styles.link}>👟 ShoeSteraj</Link>
+      
+      {/* --- LOGO SECTION --- */}
+      <div style={styles.logoContainer}>
+        <Link to="/" style={styles.logoLink}>
+            <span style={{ fontWeight: '900' }}>SHOE</span>
+            <span style={{ fontWeight: '400' }}>STERAJ</span>
+        </Link>
       </div>
+
+      {/* --- LINKS SECTION --- */}
       <div style={styles.links}>
-        <Link to="/" style={styles.link}>Home</Link>
+        <Link to="/" className="nav-item">SHOP</Link>
         
         {user ? (
-            // If Logged In:
             <>
-                {/* NEW LINK ADDED HERE */}
-                <Link to="/sell" style={{...styles.link, color: '#4CAF50', fontWeight: 'bold'}}>
-                    + Sell Shoe
-                </Link>
-                <Link to="/profile/edit" style={styles.link}>Settings</Link>
-
-                <span style={{color: '#ccc'}}>Hello, {user.username}</span>
-                <button onClick={logout} style={styles.logoutBtn}>Logout</button>
+                <Link to="/sell" className="nav-item nav-sell">SELL</Link>
+                <Link to="/mylistings" className="nav-item">MY KICKS</Link>
+                <Link to="/profile/edit" className="nav-item">SETTINGS</Link>
+                <button onClick={logout} className="nav-item nav-logout">LOGOUT</button>
             </>
         ) : (
-            // If Guest:
             <>
-                <Link to="/login" style={styles.link}>Login</Link>
-                <Link to="/register" style={styles.link}>Register</Link>
+                <Link to="/login" className="nav-item">LOGIN</Link>
+                <Link to="/register" className="nav-item">JOIN</Link>
             </>
         )}
       </div>
+
+      {/* --- CSS FOR HOVER EFFECTS --- */}
+      <style>{`
+        /* Base Link Style */
+        .nav-item {
+            font-family: 'Lato', sans-serif;
+            color: #333;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 10px 16px; /* Space for the background color */
+            border-radius: 4px; /* Soft corners */
+            transition: all 0.2s ease;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 1. Standard Hover: Light Darkening */
+        .nav-item:hover {
+            background-color: #f0f0f0; /* Light Grey Wash */
+            color: #000;
+        }
+
+        /* 2. Sell Button Special Style */
+        .nav-sell {
+            border: 1px solid #000;
+            margin-right: 5px;
+        }
+        /* Sell Hover: Invert to Black */
+        .nav-sell:hover {
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* 3. Logout Special Style */
+        .nav-logout {
+            color: #666;
+        }
+        /* Logout Hover: Warning Red Background */
+        .nav-logout:hover {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+      `}</style>
     </nav>
   );
 };
 
+// --- STATIC STYLES (Layout Only) ---
 const styles = {
   nav: {
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '1rem 2rem',
-    backgroundColor: '#333',
-    color: 'white',
+    padding: '20px 40px',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
+    borderBottom: '1px solid #f0f0f0',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1000,
   },
-  logo: {
-    fontSize: '1.5rem',
-    fontWeight: 'bold',
+  logoLink: {
+    fontFamily: '"Playfair Display", serif',
+    fontSize: '2rem',
+    color: '#000',
+    textDecoration: 'none',
+    letterSpacing: '0px',
+    textTransform: 'uppercase',
+    display: 'flex',
+    alignItems: 'center'
   },
   links: {
     display: 'flex',
-    gap: '20px',
+    gap: '10px', // Reduced gap because padding adds space now
     alignItems: 'center',
-  },
-  link: {
-    color: 'white',
-    textDecoration: 'none',
-    fontSize: '1rem',
-  },
-  logoutBtn: {
-    background: 'red',
-    color: 'white',
-    border: 'none',
-    padding: '5px 10px',
-    cursor: 'pointer',
-    borderRadius: '4px'
   }
 };
 
