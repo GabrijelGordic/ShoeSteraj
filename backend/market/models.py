@@ -31,3 +31,13 @@ class Shoe(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.brand})"
+
+
+# NEW MODEL FOR GALLERY
+class ShoeImage(models.Model):
+    shoe = models.ForeignKey(
+        Shoe, on_delete=models.CASCADE, related_name='gallery')
+    image = models.ImageField(upload_to='shoe_gallery/')
+
+    def __str__(self):
+        return f"Image for {self.shoe.title}"

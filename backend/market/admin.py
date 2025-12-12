@@ -1,4 +1,14 @@
 from django.contrib import admin
-from .models import Shoe
+from .models import Shoe, ShoeImage
 
-admin.site.register(Shoe)
+
+class ShoeImageInline(admin.TabularInline):
+    model = ShoeImage
+
+
+class ShoeAdmin(admin.ModelAdmin):
+    inlines = [ShoeImageInline]
+
+
+admin.site.register(Shoe, ShoeAdmin)
+admin.site.register(ShoeImage)

@@ -3,12 +3,14 @@ from .models import Shoe
 from .serializers import ShoeSerializer
 from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from .permissions import IsSellerOrReadOnly
 
 
 class ShoeViewSet(viewsets.ModelViewSet):
     queryset = Shoe.objects.all().order_by('-created_at')
     serializer_class = ShoeSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [
+        permissions.IsAuthenticatedOrReadOnly, IsSellerOrReadOnly]
 
     # Enable Searching and Filtering
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]

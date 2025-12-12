@@ -1,12 +1,16 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from .models import Profile
 from .serializers import ProfileSerializer
+from .permissions import IsOwnerOrReadOnly
+
+# CRITICAL: Must be ModelViewSet (allows editing), NOT ReadOnlyModelViewSet
 
 
-class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    # We want to find profiles based on the 'username' of the user, not the profile ID
+class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = [permissions.AllowAny]  # Profiles are public
-    # This allows url to be /profiles/gabrijel/ instead of /profiles/1/
+    permission_classes = [IsOwnerOrReadOnly]
     lookup_field = 'user__username'
+
+    # We explicitly allow 'patch' here so the frontend can update data
+    http_method_names = ['get', 'patch', 'head', 'options']
