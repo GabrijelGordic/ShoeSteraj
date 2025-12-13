@@ -1,18 +1,22 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API = process.env.REACT_APP_API_URL;
 
-axios.post(`${API}/auth/users/`, data)
+if (!API) {
+  throw new Error("Missing REACT_APP_API_URL. Set it in Cloudflare Pages env vars.");
+}
 
-// 2. The Interceptor (The Security Guard)
-// Before every request, check if we have a token in LocalStorage
+const api = axios.create({
+  baseURL: API,
+});
+
+// Interceptor: attach token if it exists
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        // If token exists, attach it to the header: "Authorization: Token xyz123"
-        config.headers.Authorization = `Token ${token}`;
-    }
-    return config;
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Token ${token}`;
+  }
+  return config;
 });
 
 export default api;
