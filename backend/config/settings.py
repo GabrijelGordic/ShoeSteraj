@@ -151,12 +151,15 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# CORS Settings (Allow React to talk to Django)
 CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000',
-    cast=lambda v: [s.strip() for s in v.split(',')]
+    "CORS_ALLOWED_ORIGINS",
+    default="https://shoesteraj.pages.dev",
+    cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.shoesteraj\.pages\.dev$",
+]
 
 # REST Framework Settings
 REST_FRAMEWORK = {
