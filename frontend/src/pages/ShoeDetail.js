@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
+import Meta from '../components/Meta'; // <--- ADDED IMPORT
 
 const ShoeDetail = () => {
     const { id } = useParams();
@@ -32,7 +33,6 @@ const ShoeDetail = () => {
     };
 
     const generateWhatsAppLink = (contactInfo, shoeTitle) => {
-        // Extract only numbers
         const cleanNumber = contactInfo ? contactInfo.replace(/\D/g, '') : '';
         const text = `Hi, I am interested in your listing for "${shoeTitle}" on Šuzeraj. Is it still available?`;
         const encodedText = encodeURIComponent(text);
@@ -47,6 +47,15 @@ const ShoeDetail = () => {
     return (
         <div style={pageWrapper}>
             
+            {/* --- DYNAMIC SEO META --- */}
+            <Meta 
+                title={`${shoe.title} | Šuzeraj`} 
+                description={`Buy ${shoe.title} (${shoe.condition}) for ${currencySymbol}${shoe.price}. Sold by ${shoe.seller_username}.`}
+                canonical={typeof window !== 'undefined' ? window.location.href : ''}
+                ogImage={shoe.image}
+                ogType="product"
+            />
+
             <div style={{ marginBottom: '40px' }}>
                 <Link to="/" style={backLink}>&larr; BACK TO SHOP</Link>
             </div>
@@ -114,12 +123,10 @@ const ShoeDetail = () => {
                                 Contact Options
                             </p>
                             
-                            {/* RAW INFO Display */}
                             <p style={{ margin: '0 0 15px', fontSize: '1.1rem', fontWeight: 'bold' }}>
                                 {shoe.contact_info}
                             </p>
 
-                            {/* WhatsApp Button Only */}
                             <a 
                                 href={generateWhatsAppLink(shoe.contact_info, shoe.title)}
                                 target="_blank" 
@@ -159,25 +166,8 @@ const descStyle = { fontFamily: 'Lato', fontSize: '0.95rem', lineHeight: '1.6', 
 const sellerContainer = { marginBottom: '30px' };
 const sellerLink = { textDecoration: 'none', fontFamily: 'Lato', fontSize: '1rem', fontWeight: '700', color: '#111', borderBottom: '1px solid #111' };
 const ratingBadge = { marginLeft: '10px', backgroundColor: '#111', color: '#fff', fontSize: '0.75rem', padding: '2px 6px', borderRadius: '2px', fontFamily: 'Lato' };
-
 const contactBtn = { width: '100%', padding: '20px', backgroundColor: '#111', color: '#fff', border: 'none', fontFamily: 'Lato', fontSize: '0.9rem', letterSpacing: '2px', fontWeight: '700', cursor: 'pointer' };
-
 const contactReveal = { width: '100%', padding: '20px', border: '1px solid #eee', textAlign: 'center', backgroundColor: '#fcfcfc', borderRadius: '8px' };
-
-const whatsappBtn = {
-    display: 'block',
-    width: '100%',
-    padding: '15px',
-    backgroundColor: '#25D366', // WhatsApp Green
-    color: '#fff',
-    textDecoration: 'none',
-    fontFamily: 'Lato',
-    fontWeight: 'bold',
-    borderRadius: '4px',
-    boxSizing: 'border-box',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    fontSize: '0.9rem'
-};
+const whatsappBtn = { display: 'block', width: '100%', padding: '15px', backgroundColor: '#25D366', color: '#fff', textDecoration: 'none', fontFamily: 'Lato', fontWeight: 'bold', borderRadius: '4px', boxSizing: 'border-box', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem' };
 
 export default ShoeDetail;

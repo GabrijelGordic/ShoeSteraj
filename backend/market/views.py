@@ -1,7 +1,10 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from django_filters.rest_framework import DjangoFilterBackend
 import django_filters
+from django.http import HttpResponse
+from django.utils.text import slugify
 from .models import Shoe, ShoeImage
 from .serializers import ShoeSerializer
 from .permissions import IsSellerOrReadOnly
@@ -60,3 +63,34 @@ class ShoeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(seller=self.request.user)
+
+
+# SEO: Sitemap endpoint for search engine discovery
+@api_view(['GET'])
+def sitemap_view(request):
+    """Generate XML sitemap for all shoe listings"""
+    shoes = Shoe.objects.all().order_by('-created_at')
+
+    # Get the base URL from request
+    base_url = f"{request.scheme}://{request.get_host()}"
+
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        f'  <url><loc>{base_url}/</loc><priority>1.0</priority><changefreq>daily</changefreq></url>',
+    ]
+
+    for shoe in shoes:
+        xml_lines.append(
+            f'  <url>'
+            f'<loc>{base_url}/shoes/{shoe.id}</loc>'
+            f'<lastmod>{shoe.created_at.strftime("%Y-%m-%d")}</lastmod>'
+            f'<priority>0.8</priority>'
+            f'<changefreq>weekly</changefreq>'
+            f'</url>'
+        )
+
+    xml_lines.append('</urlset>')
+
+    xml_content = '\n'.join(xml_lines)
+    return HttpResponse(xml_content, content_type='application/xml')

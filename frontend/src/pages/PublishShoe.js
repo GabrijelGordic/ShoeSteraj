@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import { useNavigate } from 'react-router-dom';
-
-// Import Phone Input Library
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import Meta from '../components/Meta'; // <--- ADDED IMPORT
 
 const PublishShoe = () => {
     const navigate = useNavigate();
@@ -17,7 +16,7 @@ const PublishShoe = () => {
     const [currency, setCurrency] = useState('EUR'); 
     const [condition, setCondition] = useState('New');
     const [description, setDescription] = useState('');
-    const [contact, setContact] = useState(''); // This will now hold the phone number
+    const [contact, setContact] = useState('');
     
     const [coverImage, setCoverImage] = useState(null);
     const [gallery, setGallery] = useState([]);
@@ -36,7 +35,6 @@ const PublishShoe = () => {
         setLoading(true);
         setError('');
 
-        // 1. STRICT VALIDATION (Everything except Description & Gallery)
         if (!title || !brand || !size || !price || !contact) {
             setError("Please fill in all required fields marked with *");
             setLoading(false);
@@ -56,11 +54,10 @@ const PublishShoe = () => {
         data.append('price', price);
         data.append('currency', currency); 
         data.append('condition', condition);
-        data.append('description', description); // Optional, can be empty
-        data.append('contact_info', contact); // Sends the formatted phone number
+        data.append('description', description);
+        data.append('contact_info', contact);
         data.append('image', coverImage);
 
-        // Append gallery only if files exist
         for (let i = 0; i < gallery.length; i++) {
             data.append('gallery_images', gallery[i]);
         }
@@ -88,6 +85,9 @@ const PublishShoe = () => {
     return (
         <div style={containerStyle}>
             
+            {/* --- META --- */}
+            <Meta title="Sell Your Kicks | Šuzeraj" />
+
             <div style={{ textAlign: 'center', marginBottom: '50px' }}>
                 <h1 style={headingStyle}>List a Product</h1>
                 <p style={subHeadingStyle}>Share your collection with the world.</p>
@@ -201,10 +201,9 @@ const PublishShoe = () => {
                     <label style={labelStyle}>
                         CONTACT NUMBER <span style={reqStar}>*</span>
                     </label>
-                    {/* Custom container for styling overrides */}
                     <div className="custom-phone-input">
                         <PhoneInput
-                            country={'hr'} // Default Croatia
+                            country={'hr'} 
                             value={contact}
                             onChange={phone => setContact(phone)}
                             inputProps={{
@@ -242,14 +241,11 @@ const PublishShoe = () => {
                 </button>
             </form>
 
-            {/* --- GLOBAL STYLES & PHONE INPUT OVERRIDES --- */}
             <style>{`
                 body { font-family: 'Lato', sans-serif; }
                 input:focus, select:focus, textarea:focus {
                     border-bottom: 1px solid #000 !important;
                 }
-
-                /* Override Phone Input Library to match Minimal Theme */
                 .custom-phone-input .react-tel-input .form-control {
                     width: 100% !important;
                     height: auto !important;
@@ -280,126 +276,17 @@ const PublishShoe = () => {
 };
 
 // --- STYLES ---
-
-const containerStyle = {
-    maxWidth: '800px',
-    margin: '60px auto',
-    padding: '40px',
-};
-
-const headingStyle = {
-    fontFamily: '"Playfair Display", serif',
-    fontSize: '2.5rem',
-    margin: '0 0 10px 0',
-    color: '#111',
-    fontWeight: '400'
-};
-
-const subHeadingStyle = {
-    fontFamily: '"Lato", sans-serif',
-    color: '#888',
-    fontSize: '0.9rem',
-    margin: 0
-};
-
-const groupStyle = {
-    marginBottom: '30px',
-    textAlign: 'left'
-};
-
-const labelStyle = {
-    display: 'block',
-    fontSize: '0.75rem',
-    color: '#999',
-    letterSpacing: '1px',
-    marginBottom: '8px',
-    fontWeight: '700'
-};
-
-const reqStar = {
-    color: '#d32f2f',
-    marginLeft: '3px'
-};
-
-const inputStyle = {
-    width: '100%',
-    border: 'none',
-    borderBottom: '1px solid #e0e0e0',
-    padding: '10px 0',
-    fontSize: '1rem',
-    outline: 'none',
-    transition: 'border-color 0.3s',
-    fontFamily: '"Lato", sans-serif',
-    backgroundColor: 'transparent',
-    color: '#333'
-};
-
-const selectStyle = {
-    width: '100%',
-    border: 'none',
-    borderBottom: '1px solid #e0e0e0',
-    padding: '10px 0',
-    fontSize: '1rem',
-    outline: 'none',
-    transition: 'border-color 0.3s',
-    fontFamily: '"Lato", sans-serif',
-    backgroundColor: 'transparent',
-    color: '#333',
-    cursor: 'pointer'
-};
-
-const textareaStyle = {
-    width: '100%',
-    border: 'none',
-    borderBottom: '1px solid #e0e0e0',
-    padding: '10px 0',
-    fontSize: '1rem',
-    outline: 'none',
-    fontFamily: '"Lato", sans-serif',
-    backgroundColor: 'transparent',
-    resize: 'none',
-    color: '#333'
-};
-
-const uploadBtn = {
-    display: 'block',
-    width: '100%',
-    padding: '15px',
-    border: '1px dashed #ccc',
-    textAlign: 'center',
-    cursor: 'pointer',
-    fontFamily: '"Lato", sans-serif',
-    fontSize: '0.85rem',
-    fontWeight: '700',
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-    transition: 'background 0.2s'
-};
-
-const buttonStyle = {
-    width: '100%',
-    padding: '18px',
-    backgroundColor: '#111',
-    color: '#fff',
-    border: 'none',
-    fontSize: '0.85rem',
-    fontWeight: '700',
-    letterSpacing: '2px',
-    cursor: 'pointer',
-    marginTop: '20px',
-    transition: 'opacity 0.2s'
-};
-
-const errorStyle = {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
-    padding: '15px',
-    fontSize: '0.9rem',
-    marginBottom: '30px',
-    borderRadius: '4px',
-    textAlign: 'center',
-    fontWeight: 'bold',
-    border: '1px solid #ef9a9a'
-};
+const containerStyle = { maxWidth: '800px', margin: '60px auto', padding: '40px' };
+const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 10px 0', color: '#111', fontWeight: '400' };
+const subHeadingStyle = { fontFamily: '"Lato", sans-serif', color: '#888', fontSize: '0.9rem', margin: 0 };
+const groupStyle = { marginBottom: '30px', textAlign: 'left' };
+const labelStyle = { display: 'block', fontSize: '0.75rem', color: '#999', letterSpacing: '1px', marginBottom: '8px', fontWeight: '700' };
+const reqStar = { color: '#d32f2f', marginLeft: '3px' };
+const inputStyle = { width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', padding: '10px 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', color: '#333' };
+const selectStyle = { width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', padding: '10px 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', color: '#333', cursor: 'pointer' };
+const textareaStyle = { width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', padding: '10px 0', fontSize: '1rem', outline: 'none', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', resize: 'none', color: '#333' };
+const uploadBtn = { display: 'block', width: '100%', padding: '15px', border: '1px dashed #ccc', textAlign: 'center', cursor: 'pointer', fontFamily: '"Lato", sans-serif', fontSize: '0.85rem', fontWeight: '700', color: '#333', backgroundColor: '#f9f9f9', transition: 'background 0.2s' };
+const buttonStyle = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: 'none', fontSize: '0.85rem', fontWeight: '700', letterSpacing: '2px', cursor: 'pointer', marginTop: '20px', transition: 'opacity 0.2s' };
+const errorStyle = { backgroundColor: '#ffebee', color: '#c62828', padding: '15px', fontSize: '0.9rem', marginBottom: '30px', borderRadius: '4px', textAlign: 'center', fontWeight: 'bold', border: '1px solid #ef9a9a' };
 
 export default PublishShoe;

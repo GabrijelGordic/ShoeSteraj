@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/axios';
 import { Link } from 'react-router-dom';
+import Meta from '../components/Meta'; // <--- ADDED IMPORT
 
 const Home = () => {
   const [shoes, setShoes] = useState([]);
@@ -88,6 +89,9 @@ const Home = () => {
   return (
     <div style={{ backgroundColor: '#FCFCFC', minHeight: '100vh', paddingBottom: '50px' }}>
       
+      {/* --- SEO META --- */}
+      <Meta /> 
+
       {/* --- HEADER --- */}
       <div style={heroHeaderStyle}>
         <h1 style={headingStyle}>Curated Collection</h1>
@@ -201,7 +205,6 @@ const Home = () => {
                                     <p style={priceStyle}>
                                         {getCurrencySymbol(shoe.currency)}{shoe.price}
                                     </p>
-                                    {/* --- RESTORED SELLER LINE --- */}
                                     <p style={sellerStyle}>
                                         Sold by {shoe.seller_username}
                                     </p>
@@ -263,7 +266,6 @@ const imageStyle = { width: '100%', height: '100%', objectFit: 'cover', transiti
 const brandStyle = { margin: '0 0 5px', color: '#999', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' };
 const titleStyle = { margin: '0 0 10px', fontFamily: '"Playfair Display", serif', fontSize: '1.2rem', fontWeight: '400', color: '#111' };
 const priceStyle = { margin: '0', fontFamily: '"Lato", sans-serif', fontSize: '1rem', fontWeight: 'bold', color: '#333' };
-// --- SELLER STYLE ADDED ---
 const sellerStyle = { margin: '15px 0 0', fontSize: '0.8rem', color: '#aaa', fontStyle: 'italic' };
 
 const pageBtn = { padding: '10px 20px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.8rem' };
