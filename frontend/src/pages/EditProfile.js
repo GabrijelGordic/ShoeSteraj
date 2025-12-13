@@ -47,8 +47,13 @@ const EditProfile = () => {
 
         try {
             await api.patch(`/api/profiles/${user.username}/`, data);
-            alert("Profile Updated Successfully!");
-            navigate(`/seller/${user.username}`);
+            
+            // REMOVED ALERT
+            // Redirect to Profile Page with Success Message
+            navigate(`/seller/${user.username}`, {
+                state: { successMessage: "Profile updated successfully!" }
+            });
+
         } catch (err) {
             console.error("Update failed:", err.response);
             setError("Failed to update profile. Please check your inputs.");
@@ -61,7 +66,6 @@ const EditProfile = () => {
     return (
         <div style={containerStyle}>
             
-            {/* --- HEADER --- */}
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                 <h1 style={headingStyle}>Account Settings</h1>
                 <p style={subHeadingStyle}>Update your public profile details.</p>
@@ -71,7 +75,7 @@ const EditProfile = () => {
 
             <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
                 
-                {/* --- AVATAR SECTION --- */}
+                {/* AVATAR SECTION */}
                 <div style={{ textAlign: 'center', marginBottom: '40px' }}>
                     <div style={avatarContainer}>
                         {preview ? (
@@ -97,7 +101,7 @@ const EditProfile = () => {
                     </label>
                 </div>
 
-                {/* --- LOCATION --- */}
+                {/* LOCATION */}
                 <div style={groupStyle}>
                     <label style={labelStyle}>LOCATION</label>
                     <input 
@@ -109,10 +113,9 @@ const EditProfile = () => {
                     />
                 </div>
 
-                {/* --- PHONE (Custom Styled) --- */}
+                {/* PHONE */}
                 <div style={groupStyle}>
                     <label style={labelStyle}>PHONE NUMBER</label>
-                    {/* We use a specific container class to override styles below */}
                     <div className="custom-phone-input">
                         <PhoneInput
                             country={'hr'}
@@ -130,11 +133,8 @@ const EditProfile = () => {
                 </button>
             </form>
 
-            {/* --- CSS OVERRIDES --- */}
             <style>{`
                 body { font-family: 'Lato', sans-serif; }
-
-                /* Override Phone Input Library to match our Minimal Theme */
                 .custom-phone-input .react-tel-input .form-control {
                     width: 100% !important;
                     height: auto !important;
@@ -151,17 +151,14 @@ const EditProfile = () => {
                     color: #333 !important;
                     transition: border-color 0.3s;
                 }
-
                 .custom-phone-input .react-tel-input .form-control:focus {
                     border-bottom: 1px solid #000 !important;
                 }
-
                 .custom-phone-input .react-tel-input .flag-dropdown {
                     background: transparent !important;
                     border: none !important;
                     border-bottom: 1px solid #e0e0e0 !important;
                 }
-                
                 input:focus {
                     border-bottom: 1px solid #000 !important;
                 }
@@ -171,122 +168,18 @@ const EditProfile = () => {
 };
 
 // --- STYLES ---
-
-const containerStyle = {
-    maxWidth: '600px',
-    margin: '60px auto',
-    padding: '40px',
-};
-
-const centerMsg = {
-    textAlign: 'center',
-    marginTop: '100px',
-    fontFamily: 'Lato',
-    color: '#888'
-};
-
-const headingStyle = {
-    fontFamily: '"Playfair Display", serif',
-    fontSize: '2.5rem',
-    margin: '0 0 10px 0',
-    color: '#111',
-    fontWeight: '400'
-};
-
-const subHeadingStyle = {
-    fontFamily: '"Lato", sans-serif',
-    color: '#888',
-    fontSize: '0.9rem',
-    margin: 0
-};
-
-const avatarContainer = {
-    width: '100px',
-    height: '100px',
-    margin: '0 auto 15px',
-    borderRadius: '50%',
-    overflow: 'hidden',
-    border: '1px solid #eee'
-};
-
-const avatarImg = {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover'
-};
-
-const avatarPlaceholder = {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f0f0f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '2rem',
-    color: '#999',
-    fontFamily: '"Playfair Display", serif'
-};
-
-const uploadLabel = {
-    fontFamily: '"Lato", sans-serif',
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    letterSpacing: '1px',
-    color: '#111',
-    cursor: 'pointer',
-    borderBottom: '1px solid #111',
-    paddingBottom: '2px'
-};
-
-const groupStyle = {
-    marginBottom: '30px',
-    textAlign: 'left'
-};
-
-const labelStyle = {
-    display: 'block',
-    fontSize: '0.75rem',
-    color: '#999',
-    letterSpacing: '1px',
-    marginBottom: '8px',
-    fontWeight: '700'
-};
-
-const inputStyle = {
-    width: '100%',
-    border: 'none',
-    borderBottom: '1px solid #e0e0e0',
-    padding: '10px 0',
-    fontSize: '1rem',
-    outline: 'none',
-    transition: 'border-color 0.3s',
-    fontFamily: '"Lato", sans-serif',
-    backgroundColor: 'transparent',
-    color: '#333'
-};
-
-const buttonStyle = {
-    width: '100%',
-    padding: '15px',
-    backgroundColor: '#111',
-    color: '#fff',
-    border: 'none',
-    fontSize: '0.85rem',
-    fontWeight: '700',
-    letterSpacing: '2px',
-    cursor: 'pointer',
-    marginTop: '10px',
-    transition: 'opacity 0.2s'
-};
-
-const errorStyle = {
-    backgroundColor: '#ffebee',
-    color: '#c62828',
-    padding: '10px',
-    fontSize: '0.9rem',
-    marginBottom: '20px',
-    borderRadius: '4px',
-    textAlign: 'center'
-};
+const containerStyle = { maxWidth: '600px', margin: '60px auto', padding: '40px' };
+const centerMsg = { textAlign: 'center', marginTop: '100px', fontFamily: 'Lato', color: '#888' };
+const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 10px 0', color: '#111', fontWeight: '400' };
+const subHeadingStyle = { fontFamily: '"Lato", sans-serif', color: '#888', fontSize: '0.9rem', margin: 0 };
+const avatarContainer = { width: '100px', height: '100px', margin: '0 auto 15px', borderRadius: '50%', overflow: 'hidden', border: '1px solid #eee' };
+const avatarImg = { width: '100%', height: '100%', objectFit: 'cover' };
+const avatarPlaceholder = { width: '100%', height: '100%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#999', fontFamily: '"Playfair Display", serif' };
+const uploadLabel = { fontFamily: '"Lato", sans-serif', fontSize: '0.75rem', fontWeight: '700', letterSpacing: '1px', color: '#111', cursor: 'pointer', borderBottom: '1px solid #111', paddingBottom: '2px' };
+const groupStyle = { marginBottom: '30px', textAlign: 'left' };
+const labelStyle = { display: 'block', fontSize: '0.75rem', color: '#999', letterSpacing: '1px', marginBottom: '8px', fontWeight: '700' };
+const inputStyle = { width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', padding: '10px 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.3s', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', color: '#333' };
+const buttonStyle = { width: '100%', padding: '15px', backgroundColor: '#111', color: '#fff', border: 'none', fontSize: '0.85rem', fontWeight: '700', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px', transition: 'opacity 0.2s' };
+const errorStyle = { backgroundColor: '#ffebee', color: '#c62828', padding: '10px', fontSize: '0.9rem', marginBottom: '20px', borderRadius: '4px', textAlign: 'center' };
 
 export default EditProfile;

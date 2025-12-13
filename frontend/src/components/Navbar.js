@@ -1,5 +1,4 @@
 import React, { useContext } from 'react';
-// FIX: Unified import
 import { Link, useNavigate } from 'react-router-dom'; 
 import AuthContext from '../context/AuthContext';
 
@@ -31,6 +30,10 @@ const Navbar = () => {
             <>
                 <Link to="/sell" className="nav-item nav-sell">SELL</Link>
                 <Link to="/mylistings" className="nav-item">MY KICKS</Link>
+                
+                {/* --- NEW PROFILE LINK --- */}
+                <Link to={`/seller/${user.username}`} className="nav-item">PROFILE</Link>
+                
                 <Link to="/profile/edit" className="nav-item">SETTINGS</Link>
                 <button onClick={handleLogout} className="nav-item nav-logout">LOGOUT</button>
             </>
