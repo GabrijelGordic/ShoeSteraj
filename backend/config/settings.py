@@ -203,6 +203,9 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1",
+                       cast=lambda v: [s.strip() for s in v.split(",")])
+
 # Security Settings (Enable in production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
@@ -212,5 +215,3 @@ if not DEBUG:
     SECURE_CONTENT_SECURITY_POLICY = {
         "default-src": ("'self'",),
     }
-    ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [
-                           s.strip() for s in v.split(',')])
