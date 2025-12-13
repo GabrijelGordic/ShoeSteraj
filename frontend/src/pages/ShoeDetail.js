@@ -4,151 +4,180 @@ import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
 
 const ShoeDetail = () => {
-    const { id } = useParams(); // Get the ID from the URL (e.g. /shoes/5)
-    const { user } = useContext(AuthContext); // Check if user is logged in
+    const { id } = useParams();
+    const { user } = useContext(AuthContext);
     
     const [shoe, setShoe] = useState(null);
-    const [mainImage, setMainImage] = useState(''); // To swap gallery images
+    const [mainImage, setMainImage] = useState(''); 
     const [showContact, setShowContact] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch the shoe data
         api.get(`/api/shoes/${id}/`)
             .then(res => {
                 setShoe(res.data);
-                // Set the default cover image as the main image to start
                 setMainImage(res.data.image); 
+                setLoading(false);
             })
-            .catch(err => console.error("Error fetching shoe:", err));
+            .catch(err => {
+                console.error("Error fetching shoe:", err);
+                setLoading(false);
+            });
     }, [id]);
 
-    if (!shoe) return <div style={{padding:'50px', textAlign:'center'}}>Loading Shoe Details...</div>;
+    const getCurrencySymbol = (code) => {
+        if (code === 'USD') return '$';
+        if (code === 'GBP') return '£';
+        return '€';
+    };
+
+    const generateWhatsAppLink = (contactInfo, shoeTitle) => {
+        // Extract only numbers
+        const cleanNumber = contactInfo ? contactInfo.replace(/\D/g, '') : '';
+        const text = `Hi, I am interested in your listing for "${shoeTitle}" on Šuzeraj. Is it still available?`;
+        const encodedText = encodeURIComponent(text);
+        return `https://wa.me/${cleanNumber}?text=${encodedText}`;
+    };
+
+    if (loading) return <div style={centerMsg}>Loading details...</div>;
+    if (!shoe) return <div style={centerMsg}>Shoe not found.</div>;
+
+    const currencySymbol = getCurrencySymbol(shoe.currency);
 
     return (
-        <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '20px' }}>
-            <Link to="/" style={{ textDecoration: 'none', color: '#666' }}>← Back to Feed</Link>
+        <div style={pageWrapper}>
+            
+            <div style={{ marginBottom: '40px' }}>
+                <Link to="/" style={backLink}>&larr; BACK TO SHOP</Link>
+            </div>
             
             <div style={containerStyle}>
                 
-                {/* --- LEFT COLUMN: IMAGE GALLERY --- */}
-                <div style={{ flex: 1, minWidth: '300px' }}>
-                    {/* Main Big Image */}
-                    <div style={{ border: '1px solid #eee', borderRadius: '10px', overflow: 'hidden', marginBottom: '10px' }}>
-                        <img 
-                            src={mainImage} 
-                            alt={shoe.title} 
-                            style={{ width: '100%', height: '400px', objectFit: 'cover' }} 
-                        />
+                {/* LEFT: IMAGERY */}
+                <div style={imageSection}>
+                    <div style={mainImageContainer}>
+                        <img src={mainImage} alt={shoe.title} style={mainImgStyle} />
                     </div>
-                    
-                    {/* Thumbnail Grid */}
-                    <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px' }}>
-                        {/* Always show the cover image as the first thumbnail */}
+                    <div style={thumbnailRow}>
                         <img 
-                            src={shoe.image} 
-                            alt="Cover"
-                            onClick={() => setMainImage(shoe.image)}
-                            style={{
-                                ...thumbStyle, 
-                                border: mainImage === shoe.image ? '2px solid blue' : '1px solid #ddd'
-                            }}
+                            src={shoe.image} alt="Cover" onClick={() => setMainImage(shoe.image)}
+                            style={{...thumbStyle, opacity: mainImage === shoe.image ? 1 : 0.5, border: mainImage === shoe.image ? '1px solid #000' : '1px solid #ddd'}}
                         />
-                        {/* Show extra gallery images if they exist */}
                         {shoe.gallery && shoe.gallery.map(img => (
                             <img 
-                                key={img.id}
-                                src={img.image} 
-                                alt="Gallery"
-                                onClick={() => setMainImage(img.image)}
-                                style={{
-                                    ...thumbStyle, 
-                                    border: mainImage === img.image ? '2px solid blue' : '1px solid #ddd'
-                                }}
+                                key={img.id} src={img.image} alt="Gallery" onClick={() => setMainImage(img.image)}
+                                style={{...thumbStyle, opacity: mainImage === img.image ? 1 : 0.5, border: mainImage === img.image ? '1px solid #000' : '1px solid #ddd'}}
                             />
                         ))}
                     </div>
                 </div>
 
-                {/* --- RIGHT COLUMN: INFO & SELLER --- */}
-                <div style={{ flex: 1, paddingLeft: '40px', minWidth: '300px' }}>
-                    
-                    {/* Title & Brand */}
-                    <h1 style={{ fontSize: '2.5rem', marginBottom: '5px' }}>{shoe.title}</h1>
-                    <h2 style={{ color: '#555', marginTop: '0' }}>{shoe.brand}</h2>
-                    
-                    {/* Specs Grid */}
+                {/* RIGHT: DETAILS */}
+                <div style={detailsSection}>
+                    <h2 style={brandStyle}>{shoe.brand}</h2>
+                    <h1 style={titleStyle}>{shoe.title}</h1>
+                    <p style={priceStyle}>{currencySymbol}{shoe.price}</p>
+
+                    <div style={divider}></div>
+
                     <div style={specGrid}>
-                        <div style={specItem}>
-                            <span style={labelStyle}>Size</span>
-                            <span style={valueStyle}>{shoe.size}</span>
-                        </div>
-                        <div style={specItem}>
-                            <span style={labelStyle}>Condition</span>
-                            <span style={valueStyle}>{shoe.condition}</span>
+                        <div style={specItem}><span style={labelStyle}>SIZE (EU)</span><span style={valueStyle}>{shoe.size}</span></div>
+                        <div style={specItem}><span style={labelStyle}>CONDITION</span><span style={valueStyle}>{shoe.condition}</span></div>
+                    </div>
+
+                    <div style={{ marginTop: '30px' }}>
+                        <h4 style={labelStyle}>DESCRIPTION</h4>
+                        <p style={descStyle}>{shoe.description || "No description provided."}</p>
+                    </div>
+
+                    <div style={divider}></div>
+
+                    <div style={sellerContainer}>
+                        <span style={labelStyle}>SOLD BY</span>
+                        <div style={{ display: 'flex', alignItems: 'center', marginTop: '5px' }}>
+                            <Link to={`/seller/${shoe.seller_username}`} style={sellerLink}>{shoe.seller_username}</Link>
+                            <span style={ratingBadge}>★ {shoe.seller_rating > 0 ? shoe.seller_rating : 'New'}</span>
                         </div>
                     </div>
 
-                    {/* Price */}
-                    <h2 style={{ color: '#2e7d32', fontSize: '2rem', margin: '20px 0' }}>
-                        ${shoe.price}
-                    </h2>
-
-                    {/* Description */}
-                    <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                        <h4 style={{marginTop:0}}>Description</h4>
-                        <p style={{ lineHeight: '1.6', color: '#444' }}>
-                            {shoe.description || "No description provided."}
-                        </p>
-                    </div>
-
-                    {/* SELLER SECTION */}
-                    <div style={{ borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                            <div>
-                                <span style={{ color: '#888' }}>Seller: </span>
-                                {/* Link to the Seller Profile Page */}
-                                <Link to={`/seller/${shoe.seller_username}`} style={{ fontSize: '1.2rem', fontWeight: 'bold', textDecoration: 'none', color: '#007bff' }}>
-                                    {shoe.seller_username}
-                                </Link>
-                            </div>
+                    {/* --- ACTION BUTTONS --- */}
+                    {!showContact ? (
+                        <button 
+                            onClick={() => user ? setShowContact(true) : alert("Please Login to view contact details.")}
+                            style={contactBtn}
+                        >
+                            CONTACT SELLER
+                        </button>
+                    ) : (
+                        <div style={contactReveal}>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', marginBottom: '15px' }}>
+                                Contact Options
+                            </p>
                             
-                            {/* Star Rating Badge */}
-                            <div style={{ background: '#fff8e1', padding: '5px 10px', borderRadius: '20px', fontWeight: 'bold', color: '#ff8f00' }}>
-                                ★ {shoe.seller_rating}
-                            </div>
-                        </div>
+                            {/* RAW INFO Display */}
+                            <p style={{ margin: '0 0 15px', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                {shoe.contact_info}
+                            </p>
 
-                        {/* Contact Logic */}
-                        {!showContact ? (
-                            <button 
-                                onClick={() => user ? setShowContact(true) : alert("Please Login to see contact info")}
-                                style={contactBtnStyle}
+                            {/* WhatsApp Button Only */}
+                            <a 
+                                href={generateWhatsAppLink(shoe.contact_info, shoe.title)}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={whatsappBtn}
                             >
-                                Contact Seller
-                            </button>
-                        ) : (
-                            <div style={{ padding: '15px', background: '#e8f5e9', border: '1px solid green', borderRadius: '5px', textAlign: 'center' }}>
-                                <strong>Contact {shoe.seller_username}:</strong>
-                                <br/>
-                                <span style={{ fontSize: '1.2rem' }}>
-                                    {shoe.contact_info || "Contact info hidden by seller"}
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                                Chat on WhatsApp
+                            </a>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
 
-// --- CSS Styles ---
-const containerStyle = { display: 'flex', marginTop: '20px', flexWrap: 'wrap' };
-const thumbStyle = { width: '80px', height: '80px', objectFit: 'cover', borderRadius: '5px', cursor: 'pointer' };
-const specGrid = { display: 'flex', gap: '40px', marginTop: '20px' };
+// --- STYLES ---
+const pageWrapper = { maxWidth: '1200px', margin: '0 auto', padding: '60px 40px', minHeight: '80vh' };
+const centerMsg = { textAlign: 'center', marginTop: '100px', fontFamily: 'Lato', color: '#888' };
+const backLink = { textDecoration: 'none', color: '#999', fontFamily: 'Lato', fontSize: '0.75rem', letterSpacing: '2px', fontWeight: '700' };
+const containerStyle = { display: 'flex', flexWrap: 'wrap', gap: '80px' };
+const imageSection = { flex: '1.2', minWidth: '350px' };
+const mainImageContainer = { backgroundColor: '#f9f9f9', marginBottom: '20px', border: '1px solid #eee' };
+const mainImgStyle = { width: '100%', height: 'auto', display: 'block', objectFit: 'cover', aspectRatio: '1/1' };
+const thumbnailRow = { display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' };
+const thumbStyle = { width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer', transition: 'opacity 0.2s' };
+const detailsSection = { flex: '1', minWidth: '300px', paddingTop: '10px' };
+const brandStyle = { fontFamily: 'Lato', fontSize: '0.9rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#666', margin: '0 0 10px 0' };
+const titleStyle = { fontFamily: '"Playfair Display", serif', fontSize: '3rem', lineHeight: '1.1', margin: '0 0 20px 0', color: '#111', fontWeight: '400' };
+const priceStyle = { fontFamily: 'Lato', fontSize: '1.5rem', fontWeight: '300', color: '#111', margin: '0 0 30px 0' };
+const divider = { height: '1px', backgroundColor: '#eee', margin: '30px 0' };
+const specGrid = { display: 'flex', gap: '50px' };
 const specItem = { display: 'flex', flexDirection: 'column' };
-const labelStyle = { fontSize: '0.9rem', color: '#888', textTransform: 'uppercase' };
-const valueStyle = { fontSize: '1.5rem', fontWeight: 'bold' };
-const contactBtnStyle = { width: '100%', padding: '15px', backgroundColor: '#111', color: 'white', border: 'none', cursor: 'pointer', fontSize: '1.1rem', borderRadius: '8px', fontWeight: 'bold' };
+const labelStyle = { fontFamily: 'Lato', fontSize: '0.7rem', letterSpacing: '1px', fontWeight: '700', color: '#999', marginBottom: '8px', textTransform: 'uppercase' };
+const valueStyle = { fontFamily: 'Lato', fontSize: '1.2rem', fontWeight: '400', color: '#111' };
+const descStyle = { fontFamily: 'Lato', fontSize: '0.95rem', lineHeight: '1.6', color: '#555', margin: 0 };
+const sellerContainer = { marginBottom: '30px' };
+const sellerLink = { textDecoration: 'none', fontFamily: 'Lato', fontSize: '1rem', fontWeight: '700', color: '#111', borderBottom: '1px solid #111' };
+const ratingBadge = { marginLeft: '10px', backgroundColor: '#111', color: '#fff', fontSize: '0.75rem', padding: '2px 6px', borderRadius: '2px', fontFamily: 'Lato' };
+
+const contactBtn = { width: '100%', padding: '20px', backgroundColor: '#111', color: '#fff', border: 'none', fontFamily: 'Lato', fontSize: '0.9rem', letterSpacing: '2px', fontWeight: '700', cursor: 'pointer' };
+
+const contactReveal = { width: '100%', padding: '20px', border: '1px solid #eee', textAlign: 'center', backgroundColor: '#fcfcfc', borderRadius: '8px' };
+
+const whatsappBtn = {
+    display: 'block',
+    width: '100%',
+    padding: '15px',
+    backgroundColor: '#25D366', // WhatsApp Green
+    color: '#fff',
+    textDecoration: 'none',
+    fontFamily: 'Lato',
+    fontWeight: 'bold',
+    borderRadius: '4px',
+    boxSizing: 'border-box',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    fontSize: '0.9rem'
+};
 
 export default ShoeDetail;

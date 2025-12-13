@@ -3,7 +3,7 @@ import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-// Import the Phone Input and its CSS
+// Import Phone Input
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 
@@ -16,6 +16,7 @@ const EditProfile = () => {
     const [avatar, setAvatar] = useState(null);
     const [preview, setPreview] = useState(null);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (user) {
@@ -24,21 +25,22 @@ const EditProfile = () => {
                     setLocation(res.data.location || '');
                     setPhone(res.data.phone_number || '');
                     setPreview(res.data.avatar);
+                    setLoading(false);
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    setLoading(false);
+                });
         }
     }, [user]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // Clear previous errors
+        setError('');
         
         const data = new FormData();
         data.append('location', location);
-        
-        // Ensure phone is sent as a string (the library might give us numbers)
         data.append('phone_number', phone); 
-        
         if (avatar) {
             data.append('avatar', avatar);
         }
@@ -48,52 +50,56 @@ const EditProfile = () => {
             alert("Profile Updated Successfully!");
             navigate(`/seller/${user.username}`);
         } catch (err) {
-            // Detailed Error Logging
             console.error("Update failed:", err.response);
-            if (err.response && err.response.data) {
-                // Show the specific error from Django (e.g., "Phone number too long")
-                setError(JSON.stringify(err.response.data));
-            } else {
-                setError("Failed to update profile. Check console.");
-            }
+            setError("Failed to update profile. Please check your inputs.");
         }
     };
 
-    if (!user) return <div>Please Login...</div>;
+    if (!user) return <div style={centerMsg}>Please Login...</div>;
+    if (loading) return <div style={centerMsg}>Loading Profile...</div>;
 
     return (
-        <div style={{ maxWidth: '500px', margin: '50px auto', padding: '20px', border: '1px solid #ddd' }}>
-            <h2>Edit Profile</h2>
+        <div style={containerStyle}>
             
-            {error && <div style={{background: '#ffebee', color: '#c62828', padding: '10px', marginBottom: '10px'}}>{error}</div>}
+            {/* --- HEADER --- */}
+            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <h1 style={headingStyle}>Account Settings</h1>
+                <p style={subHeadingStyle}>Update your public profile details.</p>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-                {/* Avatar Section */}
-                <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                    {preview && (
-                        <img 
-                            src={preview} 
-                            alt="Avatar Preview" 
-                            style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', marginBottom: '10px' }} 
-                        />
-                    )}
-                    <br/>
-                    <label style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}>
-                        Change Avatar
+            {error && <div style={errorStyle}>{error}</div>}
+
+            <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
+                
+                {/* --- AVATAR SECTION --- */}
+                <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                    <div style={avatarContainer}>
+                        {preview ? (
+                            <img src={preview} alt="Avatar" style={avatarImg} />
+                        ) : (
+                            <div style={avatarPlaceholder}>{user.username[0].toUpperCase()}</div>
+                        )}
+                    </div>
+                    
+                    <label style={uploadLabel}>
+                        CHANGE PHOTO
                         <input 
                             type="file" 
                             style={{ display: 'none' }} 
                             onChange={e => {
-                                setAvatar(e.target.files[0]);
-                                setPreview(URL.createObjectURL(e.target.files[0]));
+                                if(e.target.files[0]) {
+                                    setAvatar(e.target.files[0]);
+                                    setPreview(URL.createObjectURL(e.target.files[0]));
+                                }
                             }} 
+                            accept="image/*"
                         />
                     </label>
                 </div>
 
-                {/* Location Input */}
+                {/* --- LOCATION --- */}
                 <div style={groupStyle}>
-                    <label>Location (City, Country):</label>
+                    <label style={labelStyle}>LOCATION</label>
                     <input 
                         type="text" 
                         value={location} 
@@ -103,25 +109,184 @@ const EditProfile = () => {
                     />
                 </div>
 
-                {/* Phone Number with Flags */}
+                {/* --- PHONE (Custom Styled) --- */}
                 <div style={groupStyle}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Phone Number:</label>
-                    <PhoneInput
-                        country={'hr'} // Default country: Croatia
-                        value={phone}
-                        onChange={phone => setPhone(phone)}
-                        inputStyle={{ width: '100%', height: '35px' }}
-                    />
+                    <label style={labelStyle}>PHONE NUMBER</label>
+                    {/* We use a specific container class to override styles below */}
+                    <div className="custom-phone-input">
+                        <PhoneInput
+                            country={'hr'}
+                            value={phone}
+                            onChange={phone => setPhone(phone)}
+                            inputProps={{
+                                required: true,
+                            }}
+                        />
+                    </div>
                 </div>
 
-                <button type="submit" style={btnStyle}>Save Changes</button>
+                <button type="submit" style={buttonStyle}>
+                    SAVE CHANGES
+                </button>
             </form>
+
+            {/* --- CSS OVERRIDES --- */}
+            <style>{`
+                body { font-family: 'Lato', sans-serif; }
+
+                /* Override Phone Input Library to match our Minimal Theme */
+                .custom-phone-input .react-tel-input .form-control {
+                    width: 100% !important;
+                    height: auto !important;
+                    background: transparent !important;
+                    border: none !important;
+                    border-bottom: 1px solid #e0e0e0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    padding-left: 48px !important;
+                    padding-bottom: 10px !important;
+                    padding-top: 10px !important;
+                    font-family: 'Lato', sans-serif !important;
+                    font-size: 1rem !important;
+                    color: #333 !important;
+                    transition: border-color 0.3s;
+                }
+
+                .custom-phone-input .react-tel-input .form-control:focus {
+                    border-bottom: 1px solid #000 !important;
+                }
+
+                .custom-phone-input .react-tel-input .flag-dropdown {
+                    background: transparent !important;
+                    border: none !important;
+                    border-bottom: 1px solid #e0e0e0 !important;
+                }
+                
+                input:focus {
+                    border-bottom: 1px solid #000 !important;
+                }
+            `}</style>
         </div>
     );
 };
 
-const groupStyle = { marginBottom: '15px' };
-const inputStyle = { width: '100%', padding: '8px', boxSizing: 'border-box' };
-const btnStyle = { width: '100%', padding: '10px', background: 'green', color: 'white', border: 'none', cursor: 'pointer' };
+// --- STYLES ---
+
+const containerStyle = {
+    maxWidth: '600px',
+    margin: '60px auto',
+    padding: '40px',
+};
+
+const centerMsg = {
+    textAlign: 'center',
+    marginTop: '100px',
+    fontFamily: 'Lato',
+    color: '#888'
+};
+
+const headingStyle = {
+    fontFamily: '"Playfair Display", serif',
+    fontSize: '2.5rem',
+    margin: '0 0 10px 0',
+    color: '#111',
+    fontWeight: '400'
+};
+
+const subHeadingStyle = {
+    fontFamily: '"Lato", sans-serif',
+    color: '#888',
+    fontSize: '0.9rem',
+    margin: 0
+};
+
+const avatarContainer = {
+    width: '100px',
+    height: '100px',
+    margin: '0 auto 15px',
+    borderRadius: '50%',
+    overflow: 'hidden',
+    border: '1px solid #eee'
+};
+
+const avatarImg = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+};
+
+const avatarPlaceholder = {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0f0f0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '2rem',
+    color: '#999',
+    fontFamily: '"Playfair Display", serif'
+};
+
+const uploadLabel = {
+    fontFamily: '"Lato", sans-serif',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    letterSpacing: '1px',
+    color: '#111',
+    cursor: 'pointer',
+    borderBottom: '1px solid #111',
+    paddingBottom: '2px'
+};
+
+const groupStyle = {
+    marginBottom: '30px',
+    textAlign: 'left'
+};
+
+const labelStyle = {
+    display: 'block',
+    fontSize: '0.75rem',
+    color: '#999',
+    letterSpacing: '1px',
+    marginBottom: '8px',
+    fontWeight: '700'
+};
+
+const inputStyle = {
+    width: '100%',
+    border: 'none',
+    borderBottom: '1px solid #e0e0e0',
+    padding: '10px 0',
+    fontSize: '1rem',
+    outline: 'none',
+    transition: 'border-color 0.3s',
+    fontFamily: '"Lato", sans-serif',
+    backgroundColor: 'transparent',
+    color: '#333'
+};
+
+const buttonStyle = {
+    width: '100%',
+    padding: '15px',
+    backgroundColor: '#111',
+    color: '#fff',
+    border: 'none',
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    letterSpacing: '2px',
+    cursor: 'pointer',
+    marginTop: '10px',
+    transition: 'opacity 0.2s'
+};
+
+const errorStyle = {
+    backgroundColor: '#ffebee',
+    color: '#c62828',
+    padding: '10px',
+    fontSize: '0.9rem',
+    marginBottom: '20px',
+    borderRadius: '4px',
+    textAlign: 'center'
+};
 
 export default EditProfile;

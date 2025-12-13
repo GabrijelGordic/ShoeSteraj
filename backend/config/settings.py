@@ -148,11 +148,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    # Default permission: Read access to everyone, Write access to logged in only
-    # We will override this in specific views later if needed
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ]
+    ],
+    # --- PAGINATION SETTINGS ---
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 12,  # Default items per page
 }
 
 # Djoser Settings (Optional: Cleaner URLS)
@@ -167,10 +168,11 @@ DJOSER = {
 
 # Email Configuration (Development Mode)
 # This sends emails to your terminal/console instead of the real internet
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-EMAIL_USE_TLS = False
-DEFAULT_FROM_EMAIL = 'ShoeSteraj <noreply@shoesteraj.com>'
+# --- REAL EMAIL SETTINGS ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'gabrijel.gordic@gmail.com'  # <--- PUT YOUR GMAIL HERE
+EMAIL_HOST_PASSWORD = 'bevx rrcz rebh azji'  # <--- PUT APP PASSWORD HERE
+DEFAULT_FROM_EMAIL = 'Šuzeraj Security <noreply@shoesteraj.com>'

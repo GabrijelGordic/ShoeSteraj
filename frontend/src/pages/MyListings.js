@@ -10,9 +10,13 @@ const MyListings = () => {
 
     useEffect(() => {
         if (user) {
-            api.get(`/api/shoes/?seller__username=${user.username}`)
+            // FIX: Added page_size=100 to get all listings
+            // The API response changed structure, so we need to check for 'results'
+            api.get(`/api/shoes/?seller__username=${user.username}&page_size=100`)
                 .then(res => {
-                    setShoes(res.data);
+                    // FIX: Check if pagination is active (res.data.results) or not (res.data)
+                    const shoeData = res.data.results ? res.data.results : res.data;
+                    setShoes(shoeData);
                     setLoading(false);
                 })
                 .catch(err => {
@@ -63,15 +67,14 @@ const MyListings = () => {
                             <div style={{ flex: 1, padding: '0 20px' }}>
                                 <h3 style={titleStyle}>{shoe.title}</h3>
                                 <p style={metaStyle}>{shoe.brand} | Size {shoe.size}</p>
-                                <p style={priceStyle}>${shoe.price}</p>
+                                <p style={priceStyle}>
+                                    {/* Helper to show correct currency symbol */}
+                                    {shoe.currency === 'USD' ? '$' : shoe.currency === 'GBP' ? '£' : '€'}
+                                    {shoe.price}
+                                </p>
                             </div>
 
-                            {/* 3. Status (Optional future feature, placeholder for now) */}
-                            <div style={{ padding: '0 20px', display: 'none' /* Enable later if needed */ }}>
-                                <span style={statusStyle}>ACTIVE</span>
-                            </div>
-
-                            {/* 4. Actions */}
+                            {/* 3. Actions */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                 <Link to={`/shoes/${shoe.id}`} className="action-link view-link">
                                     VIEW
@@ -201,16 +204,6 @@ const priceStyle = {
     color: '#2e7d32', // Green
     margin: 0,
     fontWeight: '700'
-};
-
-const statusStyle = {
-    fontFamily: '"Lato", sans-serif',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    color: '#2e7d32',
-    border: '1px solid #2e7d32',
-    padding: '2px 6px',
-    borderRadius: '4px'
 };
 
 const startSellingBtn = {

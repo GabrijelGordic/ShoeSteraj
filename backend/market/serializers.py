@@ -32,6 +32,7 @@ class ShoeSerializer(serializers.ModelSerializer):
             'title',
             'brand',
             'price',
+            'currency',
             'size',
             'condition',
             'description',

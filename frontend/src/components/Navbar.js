@@ -11,8 +11,8 @@ const Navbar = () => {
       {/* --- LOGO SECTION --- */}
       <div style={styles.logoContainer}>
         <Link to="/" style={styles.logoLink}>
-            <span style={{ fontWeight: '900' }}>SHOE</span>
-            <span style={{ fontWeight: '400' }}>STERAJ</span>
+            <span style={{ fontWeight: '900' }}>ŠUZE|</span>
+            <span style={{ fontWeight: '400' }}>|RAJ</span>
         </Link>
       </div>
 

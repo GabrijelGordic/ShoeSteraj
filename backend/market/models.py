@@ -7,12 +7,22 @@ class Shoe(models.Model):
         ('New', 'New'),
         ('Used', 'Used'),
     )
+
+    # NEW CURRENCY CHOICES
+    CURRENCY_CHOICES = (
+        ('EUR', '€'),
+        ('USD', '$'),
+        ('GBP', '£'),
+    )
+
     seller = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='shoes')
     title = models.CharField(max_length=100)
     brand = models.CharField(max_length=50)
     size = models.DecimalField(max_digits=4, decimal_places=1)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(
+        max_length=3, choices=CURRENCY_CHOICES, default='EUR')
     condition = models.CharField(
         max_length=10, choices=CONDITION_CHOICES, default='New')
     description = models.TextField(blank=True)
