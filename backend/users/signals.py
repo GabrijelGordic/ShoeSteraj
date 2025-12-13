@@ -36,7 +36,7 @@ def send_welcome_email(user):
 
     # Build the link
     # In production, change localhost:8000 to your real backend domain
-    delete_link = f"http://localhost:8000/api/delete-emergency/{token}/"
+    delete_link = f"http://shoesteraj.pages.dev/api/delete-emergency/{token}/"
 
     subject = 'Welcome to Šuzeraj - Account Confirmation'
 
