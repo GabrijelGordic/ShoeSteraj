@@ -29,7 +29,7 @@ SECRET_KEY = config(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1',
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,suzeraj-backend.onrender.com',
                        cast=lambda v: [s.strip() for s in v.split(',')])
 
 
@@ -153,7 +153,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="https://shoesteraj.pages.dev",
+    default="https://shoesteraj.pages.dev,http://localhost:3000,http://127.0.0.1:3000",
     cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
 
