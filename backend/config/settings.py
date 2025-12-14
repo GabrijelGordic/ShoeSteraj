@@ -174,15 +174,15 @@ DJOSER = {
 # Switched to Port 465 (SSL) to fix "Network unreachable" on Render
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True    # Secure connection from the start
-EMAIL_USE_TLS = False
-EMAIL_TIMEOUT = 30      # Allow 30s for connection (runs in background thread)
+
+# SWITCHING BACK TO 587 (Now safe because of threading)
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 60      # Give it plenty of time
 
 EMAIL_HOST_USER = config(
     'EMAIL_HOST_USER', default='gabrijel.gordic@gmail.com')
-
-# Ensure no spaces in the password
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ntrbicwsyydwzgkd')
 DEFAULT_FROM_EMAIL = 'Šuzeraj Security <noreply@shoesteraj.com>'
 
