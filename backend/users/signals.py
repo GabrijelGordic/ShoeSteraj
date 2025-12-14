@@ -1,10 +1,12 @@
 import logging
 import threading
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -12,35 +14,43 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
-    if created:
-        # 1. Create the profile
-        from .models import Profile
-        Profile.objects.create(user=instance)
+    if not created:
+        return
 
-        # 2. Trigger the Email in a Background Thread
-        email_thread = threading.Thread(
-            target=send_welcome_email_thread, args=(instance,))
-        email_thread.start()
+    # 1) Create the profile
+    from .models import Profile
+    Profile.objects.create(user=instance)
+
+    # 2) Send welcome email (background thread)
+    # NOTE: Gunicorn/Render može ubiti worker i prekinuti thread.
+    # Ako želiš maksimalnu pouzdanost, pošalji bez threada.
+    send_welcome_email_thread(instance)
 
 
-def send_welcome_email_thread(instance):
-    """
-    This runs in the background. If it takes 10 seconds, 
-    it won't stop the user from logging in.
-    """
-    subject = "Welcome to Šuzeraj!"
-    message = f"Hi {instance.username},\n\nWelcome to the marketplace! We are glad to have you."
+def send_welcome_email_thread(user):
+    ctx = {
+        "user": user,
+        "frontend_url": "https://shoesteraj.pages.dev/",
+    }
+
+    subject = render_to_string("emails/welcome_subject.txt", ctx).strip()
+    text_body = render_to_string("emails/welcome_body.txt", ctx)
+    html_body = render_to_string("emails/welcome_body.html", ctx)
 
     try:
-        print(f"Starting email send to {instance.email}...")
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [instance.email],
-            fail_silently=False,
+        logger.info("Starting email send to %s...", user.email)
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
         )
-        print(f"SUCCESS: Email sent to {instance.email}")
+        msg.attach_alternative(html_body, "text/html")
+        msg.send(fail_silently=False)
+
+        logger.info("SUCCESS: Email sent to %s", user.email)
+
     except Exception as e:
-        # If this fails, it prints to logs, but the User is already safely registered.
-        print(f"ERROR: Failed to send email to {instance.email}. Reason: {e}")
+        logger.exception(
+            "ERROR: Failed to send email to %s. Reason: %s", user.email, e)

@@ -1,0 +1,8 @@
+Bok {{ user.username }},
+
+Hvala na registraciji na Šuzeraj.
+
+Prijavi se ovdje: {{ frontend_url }}
+
+Pozdrav,
+Šuzeraj tim
