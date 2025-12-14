@@ -1,8 +1,9 @@
 Bok {{ user.username }},
 
-Hvala na registraciji na Šuzeraj.
+Hvala na registraciji na Šuzeraj. Sretna kupnja/prodaja!
 
 Prijavi se ovdje: {{ frontend_url }}
 
 Pozdrav,
+
 Šuzeraj tim
