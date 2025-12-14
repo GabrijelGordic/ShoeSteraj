@@ -184,7 +184,7 @@ EMAIL_HOST_USER = config(
 # Ensure no spaces in the default string here either
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ntrbicwsyydwzgkd')
 DEFAULT_FROM_EMAIL = 'Šuzeraj Security <noreply@shoesteraj.com>'
-
+EMAIL_TIMEOUT = 10  # seconds
 # --- PRODUCTION SECURITY ---
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
