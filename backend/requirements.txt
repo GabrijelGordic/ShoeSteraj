@@ -28,3 +28,4 @@ social-auth-core==4.8.1
 sqlparse==0.5.4
 urllib3==2.6.1
 whitenoise==6.11.0
+django-anymail[brevo]==10.3
