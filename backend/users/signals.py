@@ -1,73 +1,41 @@
+import logging
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from django.core.signing import TimestampSigner
-from .models import Profile
+from django.contrib.auth import get_user_model
 
-# 1. Auto-Create Profile (Existing Logic)
+User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
+        # 1. Create the profile
+        from .models import Profile  # Local import to avoid circular dependency
         Profile.objects.create(user=instance)
-        # We call the email function here to ensure it happens right after creation
+
+        # 2. Send Welcome Email (Safely)
         send_welcome_email(instance)
 
 
-@receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-# 2. Send Welcome/Security Email (New Logic)
-
-
-def send_welcome_email(user):
-    """
-    Sends an email ONLY when a new user is registered.
-    Contains a 'Kill Switch' link to delete the account if the email was used by mistake.
-    """
-
-    # Generate secure token based on User ID
-    signer = TimestampSigner()
-    token = signer.sign(user.id)
-
-    # Build the link
-    # In production, change localhost:8000 to your real backend domain
-    delete_link = f"http://shoesteraj.pages.dev/api/delete-emergency/{token}/"
-
-    subject = 'Welcome to Šuzeraj - Account Confirmation'
-
-    message = f"""
-    Welcome to Šuzeraj!
-
-    Your account for username "{user.username}" has been successfully created.
-
-    --------------------------------------------------
-    YOU DID NOT CREATE THIS ACCOUNT?
-    
-    If you did not sign up for Šuzeraj, someone may be using your email address without permission.
-    Click the link below immediately to DELETE this account:
-    
-    {delete_link}
-    --------------------------------------------------
-
-    If you created this account, you can ignore this warning and log in normally.
-
-    Happy Shopping,
-    The Šuzeraj Team
-    """
+def send_welcome_email(instance):
+    subject = "Welcome to Šuzeraj!"
+    message = f"Hi {instance.username},\n\nWelcome to the marketplace! We are glad to have you."
 
     try:
+        # Use fail_silently=False to raise error if it fails,
+        # but we catch it immediately in the except block.
         send_mail(
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
-            [user.email],
+            [instance.email],
             fail_silently=False,
         )
-        print(f"--- Welcome email sent to {user.email} ---")
+        print(f"Email sent successfully to {instance.email}")
     except Exception as e:
-        print(f"--- Failed to send email: {e} ---")
+        # THIS IS THE FIX: We catch the error, log it, but DO NOT crash the server.
+        # The user will still be registered successfully.
+        print(f"WARNING: Email failed to send. Error: {e}")
