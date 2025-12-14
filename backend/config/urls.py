@@ -2,6 +2,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.conf import settings
+from django.views.static import serve
+from django.urls import re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,7 +15,15 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),  # DRF login/logout
     path('api/', include('reviews.urls')),  # Include reviews app URLs
     path('api/', include('users.urls')),  # Include users app URLs
+
 ]
+
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
+]
+
 
 # This allows us to see images during development
 if settings.DEBUG:

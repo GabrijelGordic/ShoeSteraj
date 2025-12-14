@@ -175,13 +175,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 
 # --- CHANGE THESE 3 LINES ---
-EMAIL_PORT = 465          # Was 587
-EMAIL_USE_SSL = True      # Was False (Secure from the start)
-EMAIL_USE_TLS = False     # Was True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587          # Standard for TLS
+EMAIL_USE_TLS = True      # Encrypts after connection
+EMAIL_USE_SSL = False     # Must be False for 587
+EMAIL_TIMEOUT = 30        # Give it time (it runs in background now)
 
 EMAIL_HOST_USER = config(
     'EMAIL_HOST_USER', default='gabrijel.gordic@gmail.com')
-# Ensure no spaces in the default string here either
+# Ensure no spaces in the password
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='ntrbicwsyydwzgkd')
 DEFAULT_FROM_EMAIL = 'Šuzeraj Security <noreply@shoesteraj.com>'
 EMAIL_TIMEOUT = 10  # seconds
