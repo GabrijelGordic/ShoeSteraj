@@ -22,14 +22,11 @@ ALLOWED_HOSTS = config(
     cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
 
-# Render reverse proxy / HTTPS headers
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
-
 # -----------------------------------------------------------------------------
 # APPLICATIONS
 # -----------------------------------------------------------------------------
 INSTALLED_APPS = [
+    'django_extensions',  # HTTPS support for local dev
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -138,7 +135,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 # -----------------------------------------------------------------------------
 SHARED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="https://shoesteraj.pages.dev,http://localhost:3000,http://127.0.0.1:3000",
+    default="https://shoesteraj.pages.dev,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3006,http://127.0.0.1:3006",
     cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
 
@@ -181,39 +178,58 @@ DJOSER = {
 # -----------------------------------------------------------------------------
 # EMAIL (BREVO API - WORKS ON RENDER FREE)
 # -----------------------------------------------------------------------------
-# IMPORTANT:
-# - This is NOT SMTP. This is HTTPS API via Anymail -> works on Render Free.
-# - You must verify sender/domain in Brevo, and set DEFAULT_FROM_EMAIL accordingly.
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
 ANYMAIL = {
     "BREVO_API_KEY": config("BREVO_API_KEY", default=""),
 }
 
-DEFAULT_FROM_EMAIL = config(
-    "DEFAULT_FROM_EMAIL", default="noreply@shoesteraj.com")
-
-# Optional, ali korisno da ne “zaglavi” request ako provider šteka
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@shoesteraj.com")
 EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=15, cast=int)
 
 # -----------------------------------------------------------------------------
-# LOGGING (da vidiš ako slanje faila)
+# LOGGING (Consolidated)
 # -----------------------------------------------------------------------------
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "root": {"handlers": ["console"], "level": "INFO"},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
     "loggers": {
-        "anymail": {"handlers": ["console"], "level": "INFO", "propagate": False},
-        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        # Werkzeug server logs (runserver_plus output)
+        "werkzeug": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        # General Django logs
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        # Email logs
+        "anymail": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False
+        },
     },
 }
 
 # -----------------------------------------------------------------------------
 # SECURITY (PROD)
 # -----------------------------------------------------------------------------
+# Only use these settings if DEBUG is False (Production)
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_BROWSER_XSS_FILTER = True
+else:
+    # Optional: explicit settings for local dev to be safe
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
