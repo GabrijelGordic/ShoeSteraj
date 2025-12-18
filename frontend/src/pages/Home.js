@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Meta from '../components/Meta';
-// MAKE SURE THIS IMAGE EXISTS IN YOUR ASSETS FOLDER
 import heroBanner from '../assets/hero-shoes.png'; 
 
 const Home = () => {
@@ -10,11 +9,8 @@ const Home = () => {
 
   const [shoes, setShoes] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // --- TOGGLE STATE ---
   const [showFilters, setShowFilters] = useState(false); 
 
-  // --- FILTER STATES ---
   const [search, setSearch] = useState('');
   const [brand, setBrand] = useState('');
   const [size, setSize] = useState('');
@@ -24,18 +20,12 @@ const Home = () => {
   const [currencyFilter, setCurrencyFilter] = useState('');
   const [ordering, setOrdering] = useState('-created_at');
 
-  // --- PAGINATION STATES ---
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(12);
 
-  // --- ACCORDION STATE ---
   const [openSections, setOpenSections] = useState({
-    sort: true,
-    price: true,
-    brand: false,
-    size: false,
-    condition: false
+    sort: true, price: true, brand: false, size: false, condition: false
   });
 
   const toggleSection = (section) => {
@@ -43,9 +33,7 @@ const Home = () => {
   };
 
   const SIZE_OPTIONS = [];
-  for (let i = 35; i <= 49.5; i += 0.5) {
-      SIZE_OPTIONS.push(i);
-  }
+  for (let i = 35; i <= 49.5; i += 0.5) { SIZE_OPTIONS.push(i); }
 
   const getCurrencySymbol = (code) => {
       if (code === 'USD') return '$';
@@ -56,7 +44,6 @@ const Home = () => {
   const fetchShoes = () => {
     setLoading(true);
     let query = `/api/shoes/?page=${page}&page_size=${pageSize}`;
-    
     if (search) query += `&search=${search}`;
     if (brand) query += `&brand=${brand}`;
     if (size) query += `&size=${size}`;
@@ -72,13 +59,9 @@ const Home = () => {
         setTotalPages(Math.ceil(res.data.count / pageSize));
         setLoading(false);
       })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+      .catch(err => { console.error(err); setLoading(false); });
   };
 
-  // Listen for URL changes from Navbar (Search)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const searchParam = params.get('search');
@@ -87,174 +70,73 @@ const Home = () => {
     if (sizeParam !== null) setPageSize(Number(sizeParam));
   }, [location.search]);
 
-  // Fetch when filters change
-  useEffect(() => {
-    setPage(1); 
-    fetchShoes();
-    // eslint-disable-next-line
-  }, [brand, size, condition, ordering, minPrice, maxPrice, currencyFilter, pageSize, search]); 
-
-  // Fetch when page changes
-  useEffect(() => {
-    fetchShoes();
-    // eslint-disable-next-line
-  }, [page]);
+  useEffect(() => { setPage(1); fetchShoes(); }, [brand, size, condition, ordering, minPrice, maxPrice, currencyFilter, pageSize, search]); 
+  useEffect(() => { fetchShoes(); }, [page]);
 
   const clearFilters = () => {
-    setBrand(''); setSize(''); setCondition('');
-    setMinPrice(''); setMaxPrice(''); setCurrencyFilter('');
-    setOrdering('-created_at'); setSearch('');
+    setBrand(''); setSize(''); setCondition(''); setMinPrice(''); setMaxPrice(''); setCurrencyFilter(''); setOrdering('-created_at'); setSearch('');
   };
 
   return (
     <div style={{ backgroundColor: '#b1b1b1ff', minHeight: '100vh', paddingBottom: '50px' }}>
       <Meta /> 
 
-      {/* --- HERO BANNER --- */}
+      {/* HERO BANNER */}
       <div style={{ width: '100%', height: '400px', marginBottom: '40px', position: 'relative' }}>
-          <img 
-            src={heroBanner} 
-            alt="Sneaker Collection" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          />
-          
-          <div style={{
-              position: 'absolute', 
-              top: '50%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: 'rgba(252, 247, 247, 0.90)', 
-              padding: '30px 60px',
-              textAlign: 'center',
-              color: 'black',
-              borderRadius: '2px', 
-              display: 'inline-block',
-              whiteSpace: 'nowrap'
-          }}>
-              {/* --- FLICKERING TITLE --- */}
-              <h1 style={{ 
-                  fontFamily: '"Bebas Neue", sans-serif', 
-                  fontSize: '5rem', 
-                  margin: '0 0 10px 0', 
-                  lineHeight: '0.9',
-                  fontStyle: 'normal', 
-                  letterSpacing: '2px',
-                  // ADDED ANIMATION HERE
-                  opacity: 0, 
-                  animation: 'flicker 2s linear forwards 0.5s' 
-              }}>
+          <img src={heroBanner} alt="Sneaker Collection" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(252, 247, 247, 0.90)', padding: '30px 60px', textAlign: 'center', color: 'black', borderRadius: '2px', display: 'inline-block', whiteSpace: 'nowrap' }}>
+              <h1 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: '5rem', margin: '0 0 10px 0', lineHeight: '0.9', fontStyle: 'normal', letterSpacing: '2px', opacity: 0, animation: 'flicker 2s linear forwards 0.5s' }}>
                   BUY. SELL. TRADE. 
               </h1>
-              
-              <p style={{ 
-                  fontFamily: 'Lato, sans-serif', 
-                  fontSize: '1.2rem', 
-                  fontWeight: '700', 
-                  margin: 0, 
-                  letterSpacing: '4px', 
-                  textTransform: 'uppercase',
-                  color: 'rgba(194, 84, 141)',
-                  // Optional: Subtle fade in for subtitle so it doesn't appear before title
-                  opacity: 0,
-                  animation: 'simpleFadeIn 1s ease-out forwards 1.5s'
-              }}>
+              <p style={{ fontFamily: 'Lato, sans-serif', fontSize: '1.2rem', fontWeight: '700', margin: 0, letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(194, 84, 141)', opacity: 0, animation: 'simpleFadeIn 1s ease-out forwards 1.5s' }}>
                   Built by sneakerheads, for sneakerheads.
               </p>
           </div>
       </div>
 
-      {/* --- CONTENT WRAPPER --- */}
       <div style={{ padding: '0 40px' }}>
           
-          {/* --- TOP BAR --- */}
+          {/* TOP BAR */}
           <div style={topBarStyle}>
-                
-                {/* 1. Show Filters Button */}
-                <button 
-                    onClick={() => setShowFilters(!showFilters)} 
-                    style={filterToggleBtn}
-                >
+                <button onClick={() => setShowFilters(!showFilters)} style={filterToggleBtn}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'8px'}}>
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                     </svg>
                     {showFilters ? 'HIDE FILTERS' : 'SHOW FILTERS'}
                 </button>
-
-                {/* 2. Right Side: Pagination & Count */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    
-                    {/* Items Per Page Dropdown */}
                     <div style={{ display: 'flex', alignItems: 'center', fontFamily: 'Lato', fontSize: '1.1rem', color: '#000000ff' }}>
                         <span style={{ marginRight: '8px' }}>Show:</span>
-                        <select 
-                            value={pageSize} 
-                            onChange={(e) => setPageSize(Number(e.target.value))} 
-                            style={{ padding: '5px', border: '1px solid #5d5d5dff', borderRadius: '4px', cursor: 'pointer',fontSize: '1.1rem' }}
-                        >
-                            <option value="12">12</option>
-                            <option value="24">24</option>
-                            <option value="48">48</option>
+                        <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} style={{ padding: '5px', border: '1px solid #5d5d5dff', borderRadius: '4px', cursor: 'pointer',fontSize: '1.1rem' }}>
+                            <option value="12">12</option><option value="24">24</option><option value="48">48</option>
                         </select>
                     </div>
-
-                    <span style={{ fontFamily: 'Lato', color: '#000000ff', fontSize: '1.1rem' }}>
-                        {shoes.length} Results
-                    </span>
+                    <span style={{ fontFamily: 'Lato', color: '#000000ff', fontSize: '1.1rem' }}>{shoes.length} Results</span>
                 </div>
           </div>
 
-          {/* --- MAIN FLEX LAYOUT --- */}
           <div style={flexContainerStyle}>
             
-            {/* 1. STICKY SIDEBAR */}
+            {/* SIDEBAR */}
             <aside style={stickyWrapperStyle}>
                 <div 
+                    className="custom-scrollbar"
                     style={{
                         ...animatedSidebarStyle,
-                        width: showFilters ? '280px' : '0px', 
+                        width: showFilters ? '320px' : '0px',  // Slightly wider to accommodate padding
                         opacity: showFilters ? 1 : 0,
                         marginRight: showFilters ? '40px' : '0px',
+                        // FIX: Apply padding directly to the scroll container
+                        paddingRight: '20px', 
                     }}
                 >
-                    <div style={{ width: '100%', paddingRight: '10px' }}> 
+                    <div style={{ width: '100%' }}> 
                         
-                        {/* Header Area */}
-                        <div style={{
-                            display:'flex', 
-                            justifyContent:'space-between', 
-                            alignItems:'baseline', 
-                            marginBottom: '25px', 
-                            borderBottom: '2px solid #000', 
-                            paddingBottom: '10px'
-                        }}>
-                            <h3 style={{ 
-                                fontFamily: '"Bebas Neue", sans-serif', 
-                                fontSize: '2rem', 
-                                margin: 0, 
-                                lineHeight: 1,
-                                letterSpacing: '1px'
-                            }}>
-                                FILTERS
-                            </h3>
-                            <button 
-                                onClick={clearFilters} 
-                                style={{ 
-                                    background: 'none', 
-                                    border: 'none', 
-                                    color: '#000000ff', 
-                                    fontSize: '0.8rem', 
-                                    textDecoration: 'underline', 
-                                    cursor: 'pointer', 
-                                    fontFamily: 'Lato',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                Clear All
-                            </button>
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom: '25px', borderBottom: '2px solid #000', paddingBottom: '10px' }}>
+                            <h3 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: '2rem', margin: 0, lineHeight: 1, letterSpacing: '1px' }}>FILTERS</h3>
+                            <button onClick={clearFilters} style={{ background: 'none', border: 'none', color: '#000000ff', fontSize: '0.8rem', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'Lato', textTransform: 'uppercase', fontWeight: 'bold' }}>Clear All</button>
                         </div>
 
-                        {/* Accordion List */}
                         <FilterAccordion title="SORT BY" isOpen={openSections.sort} onToggle={() => toggleSection('sort')}>
                             <div className="custom-select-wrapper">
                                 <select className="custom-select" value={ordering} onChange={e => setOrdering(e.target.value)}>
@@ -300,9 +182,7 @@ const Home = () => {
                             <div className="custom-select-wrapper">
                                 <select className="custom-select" value={size} onChange={e => setSize(e.target.value)}>
                                     <option value="">Any Size</option>
-                                    {SIZE_OPTIONS.map(s => (
-                                        <option key={s} value={s}>{s}</option>
-                                    ))}
+                                    {SIZE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
                         </FilterAccordion>
@@ -320,7 +200,7 @@ const Home = () => {
                 </div>
             </aside>
 
-            {/* --- RIGHT CONTENT (GRID) --- */}
+            {/* RIGHT CONTENT */}
             <div style={{ flex: 1 }}>
                 {loading ? (
                     <p style={{textAlign:'center', padding:'50px'}}>Updating results...</p>
@@ -335,26 +215,19 @@ const Home = () => {
                                     <div style={{ padding: '15px 0', textAlign: 'center' }}>
                                         <p style={brandStyle}>{shoe.brand}</p>
                                         <h3 style={titleStyle}>{shoe.title}</h3>
-                                        <p style={priceStyle}>
-                                            {getCurrencySymbol(shoe.currency)}{shoe.price}
-                                        </p>
-                                        <p style={sellerStyle}>
-                                            Sold by {shoe.seller_username}
-                                        </p>
+                                        <p style={priceStyle}>{getCurrencySymbol(shoe.currency)}{shoe.price}</p>
+                                        <p style={sellerStyle}>Sold by {shoe.seller_username}</p>
                                     </div>
                                 </Link>
                             </div>
                         )) : (
                             <div style={{textAlign:'center', padding:'50px', gridColumn: '1/-1'}}>
                                 <h3 style={{fontFamily: '"Bebas Neue", sans-serif', fontSize: '2rem'}}>No shoes match your filters.</h3>
-                                <button onClick={clearFilters} style={{background:'none', border:'none', textDecoration:'underline', cursor:'pointer', color:'blue'}}>
-                                    Clear all filters
-                                </button>
+                                <button onClick={clearFilters} style={{background:'none', border:'none', textDecoration:'underline', cursor:'pointer', color:'blue'}}>Clear all filters</button>
                             </div>
                         )}
                     </div>
                 )}
-
                 {totalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '60px 0' }}>
                         <button disabled={page === 1} onClick={() => {setPage(page - 1); window.scrollTo(0,0)}} style={pageBtn}>PREV</button>
@@ -367,72 +240,38 @@ const Home = () => {
       </div>
       
       <style>{`
-        /* IMPORT BEBAS NEUE HERE */
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-
         body { font-family: 'Lato', sans-serif; }
 
-        /* --- FLICKER ANIMATION --- */
-        @keyframes flicker {
-            0% { opacity: 0; }
-            5% { opacity: 0; }
-            6% { opacity: 1; }  /* ON */
-            7% { opacity: 0; }  /* OFF */
-            8% { opacity: 0; }
-            9% { opacity: 1; }  /* ON */
-            10% { opacity: 0; } /* OFF */
-            11% { opacity: 1; } /* ON */
-            15% { opacity: 1; }
-            16% { opacity: 0; } /* OFF */
-            17% { opacity: 1; } /* ON */
-            40% { opacity: 1; }
-            41% { opacity: 0.8; } /* DIM */
-            42% { opacity: 1; }
-            100% { opacity: 1; } /* STABLE */
-        }
+        /* CUSTOM SCROLLBAR CSS */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.3); border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.5); }
 
-        @keyframes simpleFadeIn {
-            to { opacity: 1; }
-        }
-
-        /* --- SIDEBAR & INPUT STYLING --- */
+        /* ANIMATIONS & INPUTS */
+        @keyframes flicker { 0% { opacity: 0; } 6% { opacity: 1; } 7% { opacity: 0; } 9% { opacity: 1; } 11% { opacity: 1; } 16% { opacity: 0; } 17% { opacity: 1; } 40% { opacity: 1; } 41% { opacity: 0.8; } 42% { opacity: 1; } 100% { opacity: 1; } }
+        @keyframes simpleFadeIn { to { opacity: 1; } }
+        
         .custom-select-wrapper { position: relative; width: 100%; }
-        .custom-select {
-            width: 100%; padding: 12px 15px; appearance: none; -webkit-appearance: none;
-            background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px;
-            font-family: 'Lato', sans-serif; fontSize: 0.9rem; font-weight: 500; color: #333;
-            cursor: pointer; transition: all 0.2s ease;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat; background-position: right 10px center; background-size: 16px;
-        }
+        .custom-select { width: 100%; padding: 12px 15px; appearance: none; -webkit-appearance: none; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.9rem; font-weight: 500; color: #333; cursor: pointer; transition: all 0.2s ease; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
         .custom-select:hover, .custom-input:hover { border-color: #000; }
         .custom-select:focus, .custom-input:focus { outline: none; border-color: #000; background-color: #fafafa; }
-        .custom-input {
-            width: 100%; padding: 12px 15px; background-color: #fff; border: 1px solid #e0e0e0;
-            border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.95rem; color: #333; transition: all 0.2s ease;
-        }
+        .custom-input { width: 100%; padding: 12px 15px; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.95rem; color: #333; transition: all 0.2s ease; }
 
-        /* --- ANIMATIONS --- */
         .product-card { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; cursor: pointer; }
         .product-card:hover .product-image { transform: scale(1.05); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        div::-webkit-scrollbar { width: 6px; }
-        div::-webkit-scrollbar-track { background: transparent; }
-        div::-webkit-scrollbar-thumb { background-color: #ddd; border-radius: 20px; }
       `}</style>
     </div>
   );
 };
 
-// --- COMPONENT: ACCORDION (UPDATED STYLING) ---
 const FilterAccordion = ({ title, children, isOpen, onToggle }) => {
     return (
       <div style={{ borderBottom: '1px solid #eee', marginBottom: '20px', paddingBottom: '20px' }}>
         <div onClick={onToggle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-          <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', color: '#000' }}>
-              {title}
-          </h4>
+          <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase', color: '#000' }}>{title}</h4>
           <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#000' }}>{isOpen ? '−' : '+'}</span>
         </div>
         {isOpen && <div style={{ marginTop: '15px' }}>{children}</div>}
@@ -440,8 +279,7 @@ const FilterAccordion = ({ title, children, isOpen, onToggle }) => {
     );
 };
 
-// --- STYLES ---
-
+// STYLES
 const topBarStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', width: '100%' };
 const flexContainerStyle = { display: 'flex', alignItems: 'flex-start', width: '100%' };
 const stickyWrapperStyle = { position: 'sticky', top: '120px', alignSelf: 'flex-start', zIndex: 50 };
