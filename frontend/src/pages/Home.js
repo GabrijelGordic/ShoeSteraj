@@ -294,7 +294,13 @@ const animatedSidebarStyle = { overflowX: 'hidden', overflowY: 'auto', maxHeight
 const filterToggleBtn = { backgroundColor: '#000', color: '#fff', border: 'none', padding: '12px 25px', fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer', letterSpacing: '1px', fontFamily: 'Lato', display: 'flex', alignItems: 'center', borderRadius: '4px', transition: 'opacity 0.2s ease' };
 const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '50px 40px' };
 const imageContainerStyle = { overflow: 'hidden', backgroundColor: '#fff', aspectRatio: '1 / 1.1', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const imageStyle = { width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' };
+const imageStyle = { 
+    width: '100%', 
+    height: '100%', 
+    objectFit: 'contain', // CHANGED FROM COVER TO CONTAIN
+    padding: '10px',      // Adds breathing room so shoe isn't touching edges
+    transition: 'transform 0.5s ease' 
+};
 const brandStyle = { margin: '0 0 5px', color: '#999', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' };
 const titleStyle = { margin: '0 0 10px', fontFamily: '"Lato", sans-serif', fontSize: '1.2rem', fontWeight: '900', color: '#111' };
 const priceStyle = { margin: '0', fontFamily: '"Lato", sans-serif', fontSize: '1rem', fontWeight: 'bold', color: '#333' };

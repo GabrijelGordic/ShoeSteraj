@@ -121,7 +121,7 @@ const MyListings = () => {
 const styles = {
   container: {
     padding: '60px 40px',
-    backgroundColor: '#b1b1b1ff', // Matching Home/Login/Register
+    backgroundColor: '#b1b1b1ff', 
     minHeight: '100vh',
   },
   header: {
@@ -138,7 +138,7 @@ const styles = {
   },
   subtitle: {
     fontFamily: 'Lato',
-    color: 'rgba(194, 84, 141)', // Matching Home/Login accents
+    color: 'rgba(194, 84, 141)', 
     fontSize: '1rem',
     fontWeight: '700',
     letterSpacing: '4px',
@@ -161,14 +161,17 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '15px',
-    // Removed border-radius to match the sharp "industrial" look
     boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
+  // --- FIXED SECTION ---
+  image: { 
+    width: '100%', 
+    height: '100%', 
+    objectFit: 'contain', 
+    padding: '10px',      
+    transition: 'transform 0.5s ease' 
   },
+  // --------------------
   info: {
       textAlign: 'center',
   },
@@ -183,7 +186,7 @@ const styles = {
   },
   cardTitle: {
     margin: '0 0 10px',
-    fontFamily: '"Lato", sans-serif', // Changed from Playfair to match Home cards
+    fontFamily: '"Lato", sans-serif', 
     fontSize: '1.2rem',
     fontWeight: '900',
     color: '#111',

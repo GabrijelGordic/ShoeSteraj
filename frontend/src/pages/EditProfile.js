@@ -85,6 +85,8 @@ const EditProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ... existing imports
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -102,7 +104,11 @@ const EditProfile = () => {
       
       setSuccessMsg('Profile updated successfully.');
       setLoading(false);
-      setTimeout(() => setSuccessMsg(''), 3000);
+      
+      // FIX 1: Force a reload so the AuthContext gets the new Location immediately
+      setTimeout(() => {
+          window.location.reload(); 
+      }, 1000);
 
     } catch (err) {
       console.error(err);
