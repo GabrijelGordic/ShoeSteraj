@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Meta from '../components/Meta';
@@ -41,7 +41,8 @@ const Home = () => {
       return '€';
   };
 
-  const fetchShoes = () => {
+  // 1. USECALLBACK prevents infinite loops
+  const fetchShoes = useCallback(() => {
     setLoading(true);
     let query = `/api/shoes/?page=${page}&page_size=${pageSize}`;
     if (search) query += `&search=${search}`;
@@ -60,7 +61,7 @@ const Home = () => {
         setLoading(false);
       })
       .catch(err => { console.error(err); setLoading(false); });
-  };
+  }, [page, pageSize, search, brand, size, condition, minPrice, maxPrice, currencyFilter, ordering]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -70,8 +71,15 @@ const Home = () => {
     if (sizeParam !== null) setPageSize(Number(sizeParam));
   }, [location.search]);
 
-  useEffect(() => { setPage(1); fetchShoes(); }, [brand, size, condition, ordering, minPrice, maxPrice, currencyFilter, pageSize, search]); 
-  useEffect(() => { fetchShoes(); }, [page]);
+  // 2. FIXED WARNING: Added 'fetchShoes' to dependency array
+  useEffect(() => { 
+    setPage(1); 
+    fetchShoes(); 
+  }, [brand, size, condition, ordering, minPrice, maxPrice, currencyFilter, pageSize, search, fetchShoes]); 
+
+  useEffect(() => { 
+    fetchShoes(); 
+  }, [page, fetchShoes]);
 
   const clearFilters = () => {
     setBrand(''); setSize(''); setCondition(''); setMinPrice(''); setMaxPrice(''); setCurrencyFilter(''); setOrdering('-created_at'); setSearch('');
@@ -123,10 +131,9 @@ const Home = () => {
                     className="custom-scrollbar"
                     style={{
                         ...animatedSidebarStyle,
-                        width: showFilters ? '320px' : '0px',  // Slightly wider to accommodate padding
+                        width: showFilters ? '320px' : '0px', 
                         opacity: showFilters ? 1 : 0,
                         marginRight: showFilters ? '40px' : '0px',
-                        // FIX: Apply padding directly to the scroll container
                         paddingRight: '20px', 
                     }}
                 >
