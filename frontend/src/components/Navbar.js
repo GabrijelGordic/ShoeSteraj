@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom'; 
 import AuthContext from '../context/AuthContext';
-import logo from '../assets/logo.png';
+import logo from '../assets/šuzeraj_logo.png';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -117,8 +117,14 @@ const Navbar = () => {
         .nav-item:hover { color: #000; }
         .nav-sell { border: 1px solid #000; padding: 8px 20px; margin-right: 15px; border-radius: 4px; }
         .nav-sell:hover { background-color: #000; color: #fff; }
-        .logo-img { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* LOGO ANIMATION & CURSOR FIX */
+        .logo-img { 
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer; /* Force pointer on image */
+        }
         .logo-img:hover { transform: scale(1.08) rotate(-3deg); }
+
         .menu-item { display: block; padding: 10px 15px; font-family: 'Lato', sans-serif; font-size: 0.9rem; color: #333; text-decoration: none; cursor: pointer; transition: background 0.2s; border: none; background: none; width: 100%; text-align: left; box-sizing: border-box; }
         .menu-item:hover { background-color: #f5f5f5; }
         .logout-btn { color: #d32f2f; }
@@ -132,7 +138,6 @@ const Navbar = () => {
 const getScrollStyles = (scrolled) => {
     if (scrolled) {
         return {
-            // INCREASED TRANSPARENCY: 0.5 (50%)
             backgroundColor: 'rgba(177, 177, 177, 0.5)', 
             backdropFilter: 'blur(12px)',
             height: '90px',
@@ -152,7 +157,10 @@ const getScrollStyles = (scrolled) => {
 
 const styles = {
   nav: { display: 'flex', justifyContent: 'space-between', padding: '0 40px', alignItems: 'center', position: 'sticky', top: 0, zIndex: 1000, transition: 'all 0.4s ease' },
-  logoLink: { display: 'flex', alignItems: 'center' },
+  
+  // FIX: Added cursor pointer explicitly to the link container
+  logoLink: { display: 'flex', alignItems: 'center', cursor: 'pointer' },
+  
   searchForm: { flex: 1, maxWidth: '500px', margin: '0 40px' },
   inputWrapper: { display: 'flex', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: '30px', padding: '5px' },
   searchInput: { flex: 1, padding: '12px', fontSize: '1rem', border: 'none', backgroundColor: 'transparent', outline: 'none', fontFamily: 'Lato' },

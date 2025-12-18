@@ -1,122 +1,224 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { useNavigate, Link } from 'react-router-dom';
 
 const Register = () => {
-    const navigate = useNavigate();
-    
-    const [formData, setFormData] = useState({ username: '', email: '', password: '', re_password: '' });
-    const [avatar, setAvatar] = useState(null);
-    const [preview, setPreview] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-        if (formData.password !== formData.re_password) { setError("Passwords do not match."); return; }
-        setLoading(true);
-        try {
-            await api.post('/auth/users/', formData);
-            if (avatar) {
-                const loginRes = await api.post('/auth/token/login/', { username: formData.username, password: formData.password });
-                const imgData = new FormData();
-                imgData.append('avatar', avatar);
-                await api.patch(`/api/profiles/${formData.username}/`, imgData, {
-                    headers: { 'Authorization': `Token ${loginRes.data.auth_token}`, 'Content-Type': 'multipart/form-data' }
-                });
-            }
-            navigate('/login', { state: { successMessage: "Account created successfully! Please sign in." } });
-        } catch (err) {
-            console.error(err.response);
-            if (err.response && err.response.data) {
-                const data = err.response.data;
-                if (data.email) setError(data.email[0]);
-                else if (data.username) setError(data.username[0]);
-                else if (data.password) setError(data.password[0]);
-                else setError("Registration failed.");
-            } else { setError("Registration failed."); }
-        } finally { setLoading(false); }
-    };
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    re_password: ''
+  });
 
-    return (
-        <div style={pageWrapper}>
-            <div style={streetwearCard}>
-                
-                <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-                    <h1 style={headingStyle}>Join the Club</h1>
-                    <p style={subHeadingStyle}>CREATE YOUR LEGACY.</p>
-                </div>
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  // Visibility states for both password fields
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRePassword, setShowRePassword] = useState(false);
 
-                {error && <div style={errorStyle}>{error}</div>}
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-                    
-                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                        <div style={avatarContainer}>
-                            {preview ? <img src={preview} alt="Avatar" style={avatarImg} /> : <div style={avatarPlaceholder}>+</div>}
-                        </div>
-                        <label style={uploadLabel}>
-                            UPLOAD PHOTO
-                            <input type="file" style={{ display: 'none' }} onChange={e => { if(e.target.files[0]) { setAvatar(e.target.files[0]); setPreview(URL.createObjectURL(e.target.files[0])); }}} accept="image/*" />
-                        </label>
-                    </div>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.re_password) {
+      setError("Passwords do not match");
+      return;
+    }
 
-                    <div style={groupStyle}>
-                        <label style={labelStyle}>USERNAME <span style={reqStar}>*</span></label>
-                        <input type="text" value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} style={inputStyle} required />
-                    </div>
+    setLoading(true);
+    setError('');
 
-                    <div style={groupStyle}>
-                        <label style={labelStyle}>EMAIL <span style={reqStar}>*</span></label>
-                        <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} style={inputStyle} required />
-                    </div>
+    try {
+      await api.post('/auth/users/', formData);
+      // Redirect with success message
+      navigate('/login', { state: { successMessage: "Account created! Please log in." } });
+    } catch (err) {
+      console.error(err);
+      if (err.response && err.response.data) {
+          const firstKey = Object.keys(err.response.data)[0];
+          // Format error array to string if needed
+          const msg = Array.isArray(err.response.data[firstKey]) 
+            ? err.response.data[firstKey][0] 
+            : err.response.data[firstKey];
+          setError(`${firstKey}: ${msg}`);
+      } else {
+          setError('Registration failed. Please try again.');
+      }
+      setLoading(false);
+    }
+  };
 
-                    <div style={groupStyle}>
-                        <label style={labelStyle}>PASSWORD <span style={reqStar}>*</span></label>
-                        <input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} style={inputStyle} required />
-                    </div>
+  return (
+    <div style={pageWrapper}>
+      <div style={streetwearCard}>
+        
+        {/* --- HEADER --- */}
+        <div style={{ marginBottom: '30px', textAlign: 'center' }}>
+            <h1 style={headingStyle}>Join The Club</h1>
+            <p style={subHeadingStyle}>CREATE AN ACCOUNT TO START TRADING.</p>
+        </div>
 
-                    <div style={groupStyle}>
-                        <label style={labelStyle}>CONFIRM PASSWORD <span style={reqStar}>*</span></label>
-                        <input type="password" value={formData.re_password} onChange={(e) => setFormData({...formData, re_password: e.target.value})} style={inputStyle} required />
-                    </div>
+        {/* --- ERROR MESSAGE --- */}
+        {error && <div style={errorStyle}>{error}</div>}
 
-                    <button type="submit" style={buttonStyle} disabled={loading}>
-                        {loading ? 'PROCESSING...' : 'CREATE ACCOUNT'}
+        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+            
+            {/* USERNAME */}
+            <div style={groupStyle}>
+                <label style={labelStyle}>USERNAME:</label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    placeholder="CHOOSE A USERNAME" 
+                    onChange={handleChange} 
+                    required 
+                    style={inputStyle} 
+                />
+            </div>
+
+            {/* EMAIL */}
+            <div style={groupStyle}>
+                <label style={labelStyle}>EMAIL:</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="NAME@EXAMPLE.COM" 
+                    onChange={handleChange} 
+                    required 
+                    style={inputStyle} 
+                />
+            </div>
+
+            {/* PASSWORD */}
+            <div style={groupStyle}>
+                <label style={labelStyle}>PASSWORD:</label>
+                <div style={passwordWrapper}>
+                    <input 
+                        type={showPassword ? "text" : "password"} 
+                        name="password" 
+                        placeholder="CREATE PASSWORD" 
+                        onChange={handleChange} 
+                        required 
+                        style={inputStyle} 
+                    />
+                    <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={eyeBtn}
+                    >
+                        {showPassword ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        )}
                     </button>
-                </form>
-
-                <div style={{ marginTop: '25px', textAlign: 'center' }}>
-                    <p style={footerTextStyle}>
-                        ALREADY A MEMBER? <Link to="/login" style={linkStyle}>SIGN IN</Link>
-                    </p>
                 </div>
             </div>
-            <style>{`
-                body { background-color: #b1b1b1ff; font-family: 'Lato', sans-serif; }
-                input:focus { border-bottom: 2px solid #000 !important; }
-            `}</style>
-        </div>
-    );
+
+            {/* CONFIRM PASSWORD */}
+            <div style={groupStyle}>
+                <label style={labelStyle}>CONFIRM PASSWORD:</label>
+                <div style={passwordWrapper}>
+                    <input 
+                        type={showRePassword ? "text" : "password"} 
+                        name="re_password" 
+                        placeholder="REPEAT PASSWORD" 
+                        onChange={handleChange} 
+                        required 
+                        style={inputStyle} 
+                    />
+                    <button 
+                        type="button"
+                        onClick={() => setShowRePassword(!showRePassword)}
+                        style={eyeBtn}
+                    >
+                         {showRePassword ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        )}
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" style={buttonStyle} disabled={loading}>
+                {loading ? 'CREATING ACCOUNT...' : 'REGISTER'}
+            </button>
+
+            <div style={{ marginTop: '30px', textAlign: 'center', borderTop:'1px solid #ccc', paddingTop:'20px' }}>
+                <p style={footerTextStyle}>
+                    ALREADY A MEMBER? <Link to="/login" style={linkStyle}>LOGIN HERE</Link>
+                </p>
+            </div>
+
+        </form>
+      </div>
+      <style>{`
+        body { background-color: #b1b1b1ff; font-family: 'Lato', sans-serif; }
+        input::placeholder { color: #555; font-weight: 300; font-size: 0.8rem; }
+        input:focus { 
+            border-bottom: 2px solid #111 !important; 
+            background-color: rgba(255,255,255,0.3);
+        }
+      `}</style>
+    </div>
+  );
 };
 
-// Reuse styles from Login for consistency
-const pageWrapper = { minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' };
-const streetwearCard = { backgroundColor: '#ddddddff', border: '2px solid #111', boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', padding: '40px', width: '100%', maxWidth: '500px' };
+// --- STYLES (Matched to Login.js) ---
+const pageWrapper = { minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' };
+
+const streetwearCard = {
+    backgroundColor: '#ddddddff',
+    border: '2px solid #111',
+    boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', // Hard Shadow
+    padding: '40px',
+    width: '100%',
+    maxWidth: '450px',
+};
+
 const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.2rem', margin: '0 0 5px 0', color: '#111', fontStyle: 'italic' };
 const subHeadingStyle = { fontFamily: '"Lato", sans-serif', color: '#888', fontSize: '0.8rem', margin: 0, letterSpacing: '2px', fontWeight: '700' };
-const avatarContainer = { width: '80px', height: '80px', margin: '0 auto 10px', borderRadius: '50%', overflow: 'hidden', border: '2px solid #eee', cursor: 'pointer' };
-const avatarImg = { width: '100%', height: '100%', objectFit: 'cover' };
-const avatarPlaceholder = { width: '100%', height: '100%', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#ccc' };
-const uploadLabel = { fontFamily: '"Lato", sans-serif', fontSize: '0.7rem', fontWeight: '900', letterSpacing: '1px', color: '#111', cursor: 'pointer', borderBottom: '1px solid #111' };
-const groupStyle = { marginBottom: '20px', textAlign: 'left' };
-const labelStyle = { display: 'block', fontSize: '1.1rem', color: '#111', letterSpacing: '1px', marginBottom: '5px', fontWeight: '900' };
-const reqStar = { color: '#d32f2f', marginLeft: '3px' };
-const inputStyle = { width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', padding: '10px 0', fontSize: '1rem', outline: 'none', transition: 'border-color 0.2s', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', fontWeight: 'bold' };
-const buttonStyle = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: '2px solid #111', fontSize: '0.9rem', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px', textTransform: 'uppercase' };
-const errorStyle = { backgroundColor: '#ffebee', color: '#c62828', padding: '10px', fontSize: '0.85rem', marginBottom: '20px', border: '1px solid #ef9a9a', textAlign: 'center' };
-const footerTextStyle = { color: '#666', fontSize: '0.85rem' };
-const linkStyle = { color: '#111', fontWeight: '900', textDecoration: 'underline', marginLeft: '5px' };
+const groupStyle = { marginBottom: '25px', textAlign: 'left' };
+const labelStyle = { display: 'block', fontSize: '1.1rem', color: '#111', letterSpacing: '1px', marginBottom: '8px', fontWeight: '900' };
+
+const inputStyle = { 
+    width: '100%', 
+    border: 'none', 
+    borderBottom: '1px solid #999', 
+    padding: '12px 0', 
+    fontSize: '1rem', 
+    outline: 'none', 
+    transition: 'all 0.3s ease', 
+    fontFamily: '"Lato", sans-serif', 
+    backgroundColor: 'transparent', 
+    fontWeight: 'bold',
+    color: '#111'
+};
+
+const buttonStyle = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: '2px solid #111', fontSize: '0.9rem', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'uppercase' };
+const errorStyle = { backgroundColor: '#ffebee', color: '#c62828', padding: '10px', fontSize: '0.85rem', marginBottom: '20px', border: '1px solid #ef9a9a', fontWeight: 'bold', textAlign: 'center' };
+const footerTextStyle = { color: '#666', fontSize: '0.85rem', margin: 0 };
+const linkStyle = { color: '#111', fontWeight: '900', textDecoration: 'underline', marginLeft: '5px', cursor: 'pointer' };
+
+// Eye Icon Styles
+const passwordWrapper = { position: 'relative', display: 'flex', alignItems: 'center' };
+const eyeBtn = {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '5px',
+    display: 'flex',
+    alignItems: 'center',
+};
 
 export default Register;
