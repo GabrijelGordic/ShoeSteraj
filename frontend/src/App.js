@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // --- CONTEXT (Global State) ---
 import { AuthProvider } from './context/AuthContext';
-
+import Wishlist from './pages/Wishlist';
 // --- COMPONENTS (Layouts) ---
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -59,6 +59,7 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/password-reset/confirm/:uid/:token" element={<ResetPasswordConfirm />} />
+                    <Route path="/wishlist" element={<Wishlist />} />
 
                     {/* ====================================================
                         3. USER DASHBOARD ROUTES (Ideally protected)

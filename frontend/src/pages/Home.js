@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Meta from '../components/Meta';
-import heroBanner from '../assets/hero-shoes.png'; 
+import heroBanner from '../assets/unnamed.jpg'; 
 
 const Home = () => {
   const location = useLocation();
@@ -86,11 +86,11 @@ const Home = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#b1b1b1ff', minHeight: '100vh', paddingBottom: '50px' }}>
+    <div style={{ backgroundColor: '#ffffffff', minHeight: '100vh', paddingBottom: '50px' }}>
       <Meta /> 
 
       {/* HERO BANNER */}
-      <div style={{ width: '100%', height: '400px', marginBottom: '40px', position: 'relative' }}>
+      <div style={{ width: '100%', height: '800px', marginBottom: '40px', position: 'relative' }}>
           <img src={heroBanner} alt="Sneaker Collection" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'rgba(252, 247, 247, 0.90)', padding: '30px 60px', textAlign: 'center', color: 'black', borderRadius: '2px', display: 'inline-block', whiteSpace: 'nowrap' }}>
               <h1 style={{ fontFamily: '"Bebas Neue", sans-serif', fontSize: '5rem', margin: '0 0 10px 0', lineHeight: '0.9', fontStyle: 'normal', letterSpacing: '2px', opacity: 0, animation: 'flicker 2s linear forwards 0.5s' }}>
@@ -301,7 +301,7 @@ const imageStyle = {
     padding: '10px',      // Adds breathing room so shoe isn't touching edges
     transition: 'transform 0.5s ease' 
 };
-const brandStyle = { margin: '0 0 5px', color: '#999', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' };
+const brandStyle = { margin: '0 0 5px', color: '#764a6aff', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' };
 const titleStyle = { margin: '0 0 10px', fontFamily: '"Lato", sans-serif', fontSize: '1.2rem', fontWeight: '900', color: '#111' };
 const priceStyle = { margin: '0', fontFamily: '"Lato", sans-serif', fontSize: '1rem', fontWeight: 'bold', color: '#333' };
 const sellerStyle = { margin: '15px 0 0', fontSize: '0.8rem', color: '#aaa', fontStyle: 'italic' };

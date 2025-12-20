@@ -60,7 +60,7 @@ const Navbar = () => {
       {/* SEARCH */}
       <form onSubmit={handleSearch} style={styles.searchForm}>
         <div style={styles.inputWrapper}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft: '15px'}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b75784" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft: '15px'}}>
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -91,13 +91,13 @@ const Navbar = () => {
                     {showDropdown && (
                         <div style={styles.dropdownMenu}>
                             <div style={styles.userInfo}>
-                                <span style={{fontSize:'0.8rem', color:'#999'}}>Signed in as</span><br/>
-                                <strong>{user.username}</strong>
+                                <span style={{fontSize:'0.8rem', color:'#ffffffff'}}>Signed in as</span><br/>
+                                <strong style={{color:'#b75784'}}>{user.username}</strong>
                             </div>
-                            <div style={styles.divider}></div>
                             <Link to="/mylistings" className="menu-item" onClick={() => setShowDropdown(false)}>My Kicks</Link>
                             <Link to={`/seller/${user.username}`} className="menu-item" onClick={() => setShowDropdown(false)}>Public Profile</Link>
                             <Link to="/profile/edit" className="menu-item" onClick={() => setShowDropdown(false)}>Settings</Link>
+                            <Link to="/wishlist" className="menu-item" onClick={() => setShowDropdown(false)}>My Wishlist</Link>
                             <div style={styles.divider}></div>
                             <button onClick={handleLogout} className="menu-item logout-btn">Log Out</button>
                         </div>
@@ -113,10 +113,10 @@ const Navbar = () => {
       </div>
 
       <style>{`
-        .nav-item { font-family: 'Lato', sans-serif; color: #333; text-decoration: none; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 15px; transition: color 0.2s ease; }
-        .nav-item:hover { color: #000; }
-        .nav-sell { border: 1px solid #000; padding: 8px 20px; margin-right: 15px; border-radius: 4px; }
-        .nav-sell:hover { background-color: #000; color: #fff; }
+        .nav-item { font-family: 'Lato', sans-serif; color: #ffffffff; text-decoration: none; font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 15px; transition: color 0.2s ease; }
+        .nav-item:hover { color: #b75784; }
+        .nav-sell { border: 1px solid #b75784; padding: 8px 20px; margin-right: 15px; border-radius: 4px; }
+        .nav-sell:hover { background-color: #b75784; color: #fff; }
         
         /* LOGO ANIMATION & CURSOR FIX */
         .logo-img { 
@@ -125,7 +125,7 @@ const Navbar = () => {
         }
         .logo-img:hover { transform: scale(1.08) rotate(-3deg); }
 
-        .menu-item { display: block; padding: 10px 15px; font-family: 'Lato', sans-serif; font-size: 0.9rem; color: #333; text-decoration: none; cursor: pointer; transition: background 0.2s; border: none; background: none; width: 100%; text-align: left; box-sizing: border-box; }
+        .menu-item { display: block; padding: 10px 15px; font-family: 'Lato', sans-serif; font-size: 0.9rem; color: white; text-decoration: none; cursor: pointer; transition: background 0.2s; border: none; background: none; width: 100%; text-align: left; box-sizing: border-box; }
         .menu-item:hover { background-color: #f5f5f5; }
         .logout-btn { color: #d32f2f; }
         .logout-btn:hover { background-color: #ffebee; }
@@ -138,7 +138,7 @@ const Navbar = () => {
 const getScrollStyles = (scrolled) => {
     if (scrolled) {
         return {
-            backgroundColor: 'rgba(177, 177, 177, 0.5)', 
+            backgroundColor: 'rgba(22, 21, 21, 0.5)', 
             backdropFilter: 'blur(12px)',
             height: '90px',
             borderBottom: 'none',
@@ -146,9 +146,9 @@ const getScrollStyles = (scrolled) => {
         };
     } else {
         return {
-            backgroundColor: '#b1b1b1ff',
+            backgroundColor: 'rgba(22, 21, 21, 1)',
             height: '110px',
-            borderBottom: '2px solid grey',
+            borderBottom: 'none',
             backdropFilter: 'none',
             boxShadow: 'none',
         };
@@ -160,15 +160,14 @@ const styles = {
   
   // FIX: Added cursor pointer explicitly to the link container
   logoLink: { display: 'flex', alignItems: 'center', cursor: 'pointer' },
-  
   searchForm: { flex: 1, maxWidth: '500px', margin: '0 40px' },
   inputWrapper: { display: 'flex', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: '30px', padding: '5px' },
   searchInput: { flex: 1, padding: '12px', fontSize: '1rem', border: 'none', backgroundColor: 'transparent', outline: 'none', fontFamily: 'Lato' },
-  links: { display: 'flex', alignItems: 'center' },
-  userIconBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', transition: 'background 0.2s' },
-  dropdownMenu: { position: 'absolute', top: '120%', right: 0, width: '200px', backgroundColor: '#fff', border: '1px solid #eee', borderRadius: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.1)', padding: '10px 0', zIndex: 1001 },
-  userInfo: { padding: '10px 15px', borderBottom: '1px solid #eee', fontFamily: 'Lato' },
-  divider: { height: '1px', backgroundColor: '#eee', margin: '5px 0' }
+  links: { display: 'flex', alignItems: 'center'},
+  userIconBtn: { background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b75784', transition: 'background 0.2s' },
+  dropdownMenu: { position: 'absolute', top: '120%', right: 0, width: '200px', backgroundColor: 'rgb(22, 21, 21)', border: '1px solid #000000ff', borderRadius: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.1)', padding: '10px 0', zIndex: 1001 },
+  userInfo: { padding: '10px 15px', borderBottom: '1px solid #b75784', fontFamily: 'Lato' },
+  divider: { height: '1px', backgroundColor: '#b75784', margin: '5px 0' }
 };
 
 export default Navbar;
