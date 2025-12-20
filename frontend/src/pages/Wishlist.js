@@ -1,14 +1,13 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
-import AuthContext from '../context/AuthContext';
 
 const Wishlist = () => {
-  const { user } = useContext(AuthContext);
   const [shoes, setShoes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch only the shoes the user has liked
     api.get('/api/shoes/favorites/')
       .then(res => {
         setShoes(res.data.results || res.data);
@@ -20,7 +19,11 @@ const Wishlist = () => {
       });
   }, []);
 
-  const getCurrencySymbol = (code) => (code === 'USD' ? '$' : code === 'GBP' ? '£' : '€');
+  const getCurrencySymbol = (code) => {
+    if (code === 'USD') return '$';
+    if (code === 'GBP') return '£';
+    return '€';
+  };
 
   if (loading) return (
     <div style={{...styles.container, display:'flex', justifyContent:'center', alignItems:'center'}}>
@@ -37,7 +40,9 @@ const Wishlist = () => {
 
       {shoes.length === 0 ? (
         <div style={styles.emptyState}>
-            <h3 style={{fontFamily: '"Bebas Neue", sans-serif', fontSize:'2.5rem', marginBottom:'20px'}}>NO FAVORITES YET.</h3>
+            <h3 style={{fontFamily: '"Bebas Neue", sans-serif', fontSize:'2.5rem', marginBottom:'20px'}}>
+                NO FAVORITES YET.
+            </h3>
             <Link to="/" style={styles.shopBtn}>BROWSE KICKS</Link>
         </div>
       ) : (
@@ -63,13 +68,14 @@ const Wishlist = () => {
   );
 };
 
+// --- STYLES ---
 const styles = {
   container: { padding: '60px 40px', backgroundColor: '#b1b1b1ff', minHeight: '100vh' },
   header: { textAlign: 'center', marginBottom: '60px' },
   title: { fontFamily: '"Bebas Neue", sans-serif', fontSize: '4rem', margin: '0 0 10px 0', color: '#111', lineHeight: '0.9' },
   subtitle: { fontFamily: 'Lato', color: 'rgba(194, 84, 141)', fontSize: '1rem', fontWeight: '700', letterSpacing: '4px', textTransform: 'uppercase' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '50px 40px' },
-  card: { backgroundColor: 'transparent', cursor: 'pointer' },
+  card: { backgroundColor: 'transparent', cursor: 'pointer', transition: 'transform 0.2s' },
   imageContainer: { overflow: 'hidden', backgroundColor: '#fff', aspectRatio: '1 / 1.1', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' },
   image: { width: '100%', height: '100%', objectFit: 'contain', padding: '10px' },
   info: { textAlign: 'center' },
