@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { Country, City } from 'country-state-city';
+import { Country } from 'country-state-city'; // Removed 'City' import
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,14 +15,12 @@ const Register = () => {
     re_password: ''
   });
 
-  // --- PHONE STATE ---
+  // --- LOCATION & PHONE STATE ---
   const [dialCode, setDialCode] = useState('');
   const [phoneDigits, setPhoneDigits] = useState('');
-
-  // --- LOCATION STATE ---
   const [countryCode, setCountryCode] = useState('');
   const [countryName, setCountryName] = useState('');
-  const [city, setCity] = useState('');
+  const [city, setCity] = useState(''); // Manual input now
 
   // --- UI STATE ---
   const [loading, setLoading] = useState(false);
@@ -32,14 +30,18 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRePassword, setShowRePassword] = useState(false);
 
-  // --- DATA HELPERS ---
+  // --- OPTIMIZED DATA LOADING ---
+  const allCountries = useMemo(() => Country.getAllCountries(), []);
   
-  // 1. UPDATED SORTING: Sort by Phone Code (Numeric Ascending)
-  const countries = Country.getAllCountries().sort((a, b) => {
-      return parseInt(a.phonecode) - parseInt(b.phonecode);
-  });
+  // List for Country Dropdown (Sorted A-Z by Name)
+  const countriesByName = useMemo(() => {
+      return [...allCountries].sort((a, b) => a.name.localeCompare(b.name));
+  }, [allCountries]);
 
-  const cities = countryCode ? City.getCitiesOfCountry(countryCode).sort((a, b) => a.name.localeCompare(b.name)) : [];
+  // List for Phone Code Dropdown (Sorted 1-999 by Code)
+  const countriesByPhone = useMemo(() => {
+      return [...allCountries].sort((a, b) => parseInt(a.phonecode) - parseInt(b.phonecode));
+  }, [allCountries]);
 
   // --- HANDLERS ---
   const handleChange = (e) => {
@@ -51,16 +53,19 @@ const Register = () => {
 
   const handleCountryChange = (e) => {
       const code = e.target.value;
+      
       if (!code) {
-          setCountryCode(''); setCountryName(''); setCity(''); return;
+          setCountryCode(''); setCountryName(''); setDialCode('');
+          return;
       }
+
       const cData = Country.getCountryByCode(code);
       if (cData) {
           setCountryCode(code);
           setCountryName(cData.name);
-          setCity(''); 
+          // We no longer clear the city here, let them keep typing if they switch countries
           
-          // Auto-select the phone code based on location
+          // Auto-select the correct phone code
           setDialCode(cData.phonecode);
 
           if (fieldErrors.location) setFieldErrors({ ...fieldErrors, location: '' });
@@ -72,7 +77,7 @@ const Register = () => {
     setFieldErrors({}); 
     setGeneralError('');
     
-    // 1. CLIENT-SIDE VALIDATION
+    // 1. VALIDATION
     let errors = {};
 
     if (formData.password !== formData.re_password) {
@@ -81,11 +86,9 @@ const Register = () => {
     if (formData.password.length < 8) {
       errors.password = "Password must be at least 8 characters.";
     }
-    if (!countryName || !city) {
-        errors.location = "Please select your full location.";
+    if (!countryName || !city.trim()) {
+        errors.location = "Please enter your full location.";
     }
-    
-    // Check Phone
     if (!dialCode || !phoneDigits || phoneDigits.length < 6) {
         errors.phone_number = "Please enter a valid phone number.";
     }
@@ -97,7 +100,7 @@ const Register = () => {
 
     setLoading(true);
 
-    const fullLocation = `${city}, ${countryName}`;
+    const fullLocation = `${city.trim()}, ${countryName}`;
     const fullPhoneNumber = `+${dialCode}${phoneDigits}`;
 
     const payload = { 
@@ -124,7 +127,6 @@ const Register = () => {
           if (backendErrors.non_field_errors) {
               setGeneralError(backendErrors.non_field_errors[0]);
           }
-
           setFieldErrors(newFieldErrors);
       } else {
           setGeneralError('Network error. Please try again later.');
@@ -180,9 +182,11 @@ const Register = () => {
                 {fieldErrors.email && <p style={fieldErrorText}>{fieldErrors.email}</p>}
             </div>
 
-            {/* LOCATION */}
+            {/* LOCATION SELECTOR */}
             <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '20px' }}>
+                    
+                    {/* COUNTRY (Dropdown) */}
                     <div style={{ flex: 1 }}>
                         <label style={labelStyle}>COUNTRY</label>
                         <div className="custom-select-wrapper">
@@ -194,39 +198,25 @@ const Register = () => {
                                 style={fieldErrors.location ? errorBorder : {}}
                             >
                                 <option value="">Select Country</option>
-                                {/* We now display sorted by Name here for easy finding */}
-                                {/* Wait, you asked to sort NUMBERS by number, but usually COUNTRIES are sorted by name. 
-                                    I will keep the Country dropdown A-Z (lines 37-39 above handle sorting the full list).
-                                    But below, I will use a separate sorted list for the PHONE dropdown. 
-                                */}
-                                {countries.sort((a,b) => a.name.localeCompare(b.name)).map((c) => (
+                                {countriesByName.map((c) => (
                                     <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
                                 ))}
                             </select>
                         </div>
                     </div>
 
+                    {/* CITY (Manual Input) */}
                     <div style={{ flex: 1 }}>
                         <label style={labelStyle}>CITY</label>
-                        <div className="custom-select-wrapper">
-                            <select 
-                                value={city} 
-                                onChange={(e) => setCity(e.target.value)} 
-                                required 
-                                className="custom-select"
-                                disabled={!countryCode} 
-                                style={{ opacity: !countryCode ? 0.5 : 1, ...(fieldErrors.location ? errorBorder : {}) }}
-                            >
-                                <option value="">{countryCode ? "Select City" : "..."}</option>
-                                {cities.length > 0 ? (
-                                    cities.map((c) => (
-                                        <option key={c.name} value={c.name}>{c.name}</option>
-                                    ))
-                                ) : (
-                                    <option value="Other">Other</option>
-                                )}
-                            </select>
-                        </div>
+                        <input 
+                            type="text" 
+                            className="custom-input"
+                            placeholder="Enter City" 
+                            value={city} 
+                            onChange={(e) => setCity(e.target.value)}
+                            required 
+                            style={fieldErrors.location ? errorBorder : {}}
+                        />
                     </div>
                 </div>
                 {fieldErrors.location && <p style={fieldErrorText}>{fieldErrors.location}</p>}
@@ -237,7 +227,7 @@ const Register = () => {
                 <label style={labelStyle}>PHONE NUMBER (FOR WHATSAPP)</label>
                 <div style={{ display: 'flex', gap: '10px' }}>
                     
-                    {/* PHONE CODE DROPDOWN (Sorted Numerically 1 -> 999) */}
+                    {/* PHONE CODE DROPDOWN */}
                     <div style={{ width: '130px', position: 'relative' }}>
                         <select 
                             value={dialCode}
@@ -250,8 +240,7 @@ const Register = () => {
                             required
                         >
                             <option value="">Code</option>
-                            {/* Create a fresh sorted copy for this dropdown */}
-                            {[...countries].sort((a, b) => parseInt(a.phonecode) - parseInt(b.phonecode)).map((c) => (
+                            {countriesByPhone.map((c) => (
                                 <option key={c.isoCode} value={c.phonecode}>
                                     +{c.phonecode} ({c.isoCode})
                                 </option>
@@ -262,7 +251,7 @@ const Register = () => {
                     <input 
                         type="tel" 
                         className="custom-input"
-                        placeholder="91 123 4567" 
+                        placeholder="123 456 789" 
                         value={phoneDigits}
                         onChange={(e) => setPhoneDigits(e.target.value)}
                         required 
