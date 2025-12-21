@@ -7,6 +7,9 @@ import heroBanner from '../assets/unnamed.jpg';
 const Home = () => {
   const location = useLocation();
 
+  // Capture success message from Sell page
+  const successMsg = location.state?.successMessage; 
+
   const [shoes, setShoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false); 
@@ -87,6 +90,21 @@ const Home = () => {
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', paddingBottom: '50px', overflowX: 'hidden' }}>
       <Meta /> 
 
+      {/* SUCCESS MESSAGE BANNER */}
+      {successMsg && (
+          <div style={{
+              backgroundColor: '#111', 
+              color: '#fff', 
+              textAlign: 'center', 
+              padding: '15px', 
+              fontFamily: 'Lato', 
+              fontWeight: 'bold', 
+              letterSpacing: '1px'
+          }}>
+              {successMsg}
+          </div>
+      )}
+
       {/* HERO BANNER */}
       <div className="hero-container">
           <img src={heroBanner} alt="Sneaker Collection" className="hero-image" />
@@ -102,7 +120,6 @@ const Home = () => {
 
       <div className="main-content-pad">
           
-          {/* TOP BAR */}
           <div className="top-bar-container">
                 <button onClick={() => setShowFilters(!showFilters)} className="filter-toggle-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'6px'}}>
@@ -124,10 +141,8 @@ const Home = () => {
 
           <div style={flexContainerStyle}>
             
-            {/* SIDEBAR - NOW USING CSS CLASS TOGGLING */}
+            {/* SIDEBAR */}
             <aside className={`filter-sidebar ${showFilters ? 'open' : ''}`}>
-                
-                {/* MOBILE CLOSE BUTTON */}
                 <div className="mobile-close-header" onClick={() => setShowFilters(false)}>
                     <span>FILTERS</span>
                     <span>✕</span>
@@ -245,60 +260,42 @@ const Home = () => {
         body { font-family: 'Lato', sans-serif; margin: 0; padding: 0; }
         * { box-sizing: border-box; }
 
-        /* --- HERO SECTION --- */
+        /* --- DESKTOP DEFAULT STYLES --- */
         .hero-container { 
-            width: 100vw; 
-            margin-left: calc(50% - 50vw); 
+            width: 100%; /* FIX: Use 100% on desktop to prevent overflow */
             height: 800px; 
             margin-bottom: 40px; 
             position: relative; 
         }
         .hero-image { width: 100%; height: 100%; object-fit: cover; }
         .hero-text-box {
-            position: absolute; 
-            top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background-color: rgba(252, 247, 247, 0.90); 
-            text-align: center; color: black; border-radius: 2px; padding: 30px 60px;
-            display: inline-block; z-index: 10;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background-color: rgba(252, 247, 247, 0.90); text-align: center; color: black; 
+            border-radius: 2px; padding: 30px 60px; display: inline-block; z-index: 10;
         }
         .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: 5rem; margin: 0 0 10px 0; line-height: 0.9; letter-spacing: 2px; opacity: 0; animation: flicker 2s linear forwards 0.5s; }
         .hero-subtitle { font-family: 'Lato', sans-serif; fontWeight: 700; margin: 0; letterSpacing: 4px; text-transform: uppercase; color: rgba(194, 84, 141); opacity: 0; animation: simpleFadeIn 1s ease-out forwards 1.5s; fontSize: 1.2rem; }
 
         .main-content-pad { padding: 0 40px; }
 
-        /* --- SIDEBAR STYLES (New) --- */
         .filter-sidebar {
-            /* Desktop Default */
-            position: sticky;
-            top: 120px;
-            align-self: flex-start;
-            z-index: 50;
-            height: calc(100vh - 150px);
-            overflow-y: auto;
-            background: #fff;
-            
-            /* Hidden State Desktop */
-            width: 0;
-            opacity: 0;
-            margin-right: 0;
-            padding-right: 0;
-            overflow-x: hidden;
-            transition: all 0.4s ease;
+            position: sticky; top: 120px; align-self: flex-start; z-index: 50; height: calc(100vh - 150px);
+            overflow-y: auto; background: #fff; width: 0; opacity: 0; margin-right: 0; padding-right: 0; overflow-x: hidden; transition: all 0.4s ease;
         }
-
-        .filter-sidebar.open {
-            /* Open State Desktop */
-            width: 320px;
-            opacity: 1;
-            margin-right: 40px;
-            padding-right: 20px;
-        }
-
+        .filter-sidebar.open { width: 320px; opacity: 1; margin-right: 40px; padding-right: 20px; }
         .mobile-close-header { display: none; }
 
-        /* --- MOBILE STYLES --- */
+        /* Desktop Grid */
+        .grid-responsive { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 50px 40px; }
+
+        /* --- MOBILE STYLES (Max Width 768px) --- */
         @media (max-width: 768px) {
-            .hero-container { height: 500px; } 
+            /* Full Width Hero for Mobile Only */
+            .hero-container { 
+                height: 500px; 
+                width: 100vw; 
+                margin-left: calc(50% - 50vw); 
+            }
             .hero-text-box { padding: 20px 20px; width: 90%; }
             .hero-title { font-size: 3.5rem !important; } 
             .hero-subtitle { font-size: 0.8rem !important; }
@@ -306,31 +303,18 @@ const Home = () => {
             .top-bar-container { flex-wrap: wrap; gap: 15px; }
             .top-bar-right { gap: 10px; }
             .main-content-pad { padding: 0 15px !important; }
-            .grid-responsive { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 15px; }
 
-            /* SIDEBAR MOBILE OVERRIDE */
+            /* Mobile Grid: 2 Columns (140px min) */
+            .grid-responsive { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px 15px; }
+
+            /* Mobile Sidebar */
             .filter-sidebar {
-                position: fixed !important;
-                top: 0; left: 0;
-                height: 100vh !important;
-                width: 100vw !important;
-                z-index: 9999;
-                margin: 0 !important;
-                padding: 20px !important;
-                
-                /* Hidden State Mobile (Slide out) */
-                transform: translateX(-100%);
-                opacity: 1; /* Keep opacity 1 so it doesn't fade, just slides */
-                width: 100vw !important;
+                position: fixed !important; top: 0; left: 0; height: 100vh !important; width: 100vw !important; z-index: 9999;
+                margin: 0 !important; padding: 20px !important;
+                transform: translateX(-100%); opacity: 1; /* Slide out */
             }
+            .filter-sidebar.open { transform: translateX(0); width: 100vw !important; } /* Slide in */
 
-            .filter-sidebar.open {
-                /* Open State Mobile (Slide in) */
-                transform: translateX(0);
-                width: 100vw !important;
-            }
-
-            /* Show Close Button on Mobile */
             .mobile-close-header { 
                 display: flex; justify-content: space-between; align-items: center;
                 margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #000;
@@ -342,7 +326,6 @@ const Home = () => {
             .hero-title { font-size: 2.8rem !important; }
         }
 
-        /* --- OTHER STYLES --- */
         .top-bar-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; width: 100%; }
         .top-bar-right { display: flex; align-items: center; gap: 20px; }
         .filter-toggle-btn { background-color: #000; color: #fff; border: none; padding: 12px 25px; fontSize: 0.9rem; fontWeight: 700; cursor: pointer; letter-spacing: 1px; fontFamily: 'Lato'; display: flex; alignItems: center; border-radius: 4px; }
@@ -373,7 +356,7 @@ const FilterAccordion = ({ title, children, isOpen, onToggle }) => {
     );
 };
 
-// STYLES
+// Styles
 const flexContainerStyle = { display: 'flex', alignItems: 'flex-start', width: '100%' };
 const imageContainerStyle = { overflow: 'hidden', backgroundColor: '#fff', aspectRatio: '1 / 1.1', display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const imageStyle = { width: '100%', height: '100%', objectFit: 'contain', padding: '10px', transition: 'transform 0.5s ease' };

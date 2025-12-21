@@ -6,7 +6,6 @@ const Sell = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  // Store array of file objects and preview URLs
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   
@@ -20,16 +19,16 @@ const Sell = () => {
   const handleImageChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles(prev => [...prev, ...newFiles]); // Append new files
-
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setPreviews(prev => [...prev, ...newPreviews]);
+      const totalFiles = [...files, ...newFiles].slice(0, 5);
+      setFiles(totalFiles);
+      setPreviews(totalFiles.map(file => URL.createObjectURL(file)));
     }
   };
 
-  // Remove a specific image from the list
   const removeImage = (index) => {
-      setFiles(files.filter((_, i) => i !== index));
+      const updatedFiles = files.filter((_, i) => i !== index);
+      setFiles(updatedFiles);
+      if (previews[index]) URL.revokeObjectURL(previews[index]);
       setPreviews(previews.filter((_, i) => i !== index));
   };
 
@@ -40,20 +39,24 @@ const Sell = () => {
     const data = new FormData();
     Object.keys(formData).forEach(key => data.append(key, formData[key]));
 
-    // Append multiple images. 
-    // NOTE: Your backend must be set up to handle 'uploaded_images' list
-    files.forEach(file => {
-        data.append('uploaded_images', file); 
-    });
+    if (files.length > 0) {
+        data.append('image', files[0]); // First image is cover
+    } else {
+        alert("Please add at least one photo.");
+        setLoading(false);
+        return;
+    }
 
     try {
+      // FIX: Changed from '/shoes/' back to '/api/shoes/' to match your logs
       await api.post('/api/shoes/', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      navigate('/'); 
+      navigate('/', { state: { successMessage: 'LISTING PUBLISHED SUCCESSFULLY!' } });
     } catch (err) {
       console.error(err);
-      alert('Failed to create listing.');
+      const msg = err.response?.data ? JSON.stringify(err.response.data) : 'Failed to list item.';
+      alert(msg);
       setLoading(false);
     }
   };
@@ -67,10 +70,7 @@ const Sell = () => {
         </div>
 
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-            {/* ... (Keep your existing Input Fields for Title, Brand, etc. here) ... */}
-            
-            {/* --- REUSE YOUR EXISTING INPUTS FROM PREVIOUS STEP HERE --- */}
-            {/* just copy the "SECTION 1" and "SECTION 2" form groups from previous code */}
+             {/* Row 1 */}
              <div style={rowStyle}>
                 <div style={groupStyle}>
                     <label style={labelStyle}>AD TITLE:</label>
@@ -94,11 +94,20 @@ const Sell = () => {
                 </div>
             </div>
 
-             <div style={rowStyle}>
+            {/* Row 2 */}
+            <div style={rowStyle}>
+                <div style={groupStyle}>
+                    <label style={labelStyle}>MODEL:</label>
+                    <input type="text" name="model" placeholder="E.G. RETRO HIGH" onChange={handleChange} required style={inputStyle} />
+                </div>
                 <div style={groupStyle}>
                     <label style={labelStyle}>SIZE (EU):</label>
                     <input type="number" step="0.5" name="size" placeholder="42.5" onChange={handleChange} required style={inputStyle} />
                 </div>
+            </div>
+
+            {/* Row 3 */}
+             <div style={rowStyle}>
                 <div style={groupStyle}>
                     <label style={labelStyle}>CONDITION:</label>
                     <div style={selectWrapper}>
@@ -109,9 +118,6 @@ const Sell = () => {
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <div style={rowStyle}>
                 <div style={{...groupStyle, flex: 2}}>
                     <label style={labelStyle}>PRICE:</label>
                     <input type="number" name="price" placeholder="0.00" onChange={handleChange} required style={inputStyle} />
@@ -128,42 +134,27 @@ const Sell = () => {
                 </div>
             </div>
 
-
-            {/* --- NEW MULTI-IMAGE UPLOAD SECTION --- */}
+            {/* Photos */}
             <div style={{ marginBottom: '30px' }}>
-                <label style={labelStyle}>PHOTOS ({files.length}):</label>
-                
-                {/* Upload Box */}
+                <label style={labelStyle}>PHOTOS ({files.length}/5):</label>
                 <div style={fileUploadWrapper}>
-                    <input 
-                        type="file" 
-                        accept="image/*" 
-                        multiple // ALLOW MULTIPLE
-                        onChange={handleImageChange} 
-                        style={fileInput} 
-                        id="file-upload"
-                    />
-                    <label htmlFor="file-upload" style={fileLabel}>
+                    <input type="file" accept="image/*" multiple onChange={handleImageChange} style={fileInput} id="file-upload" disabled={files.length >= 5} />
+                    <label htmlFor="file-upload" style={{...fileLabel, cursor: files.length >= 5 ? 'not-allowed' : 'pointer'}}>
                         <div style={{textAlign:'center'}}>
                             <span style={{fontSize:'2rem', display:'block', marginBottom:'5px'}}>📷</span>
-                            <span style={{fontFamily:'Lato', color:'#666', fontWeight:'bold', fontSize:'0.8rem'}}>ADD PHOTOS</span>
+                            <span style={{fontFamily:'Lato', color:'#666', fontWeight:'bold', fontSize:'0.8rem'}}>
+                                {files.length >= 5 ? 'MAX PHOTOS REACHED' : 'ADD PHOTOS'}
+                            </span>
                         </div>
                     </label>
                 </div>
-
-                {/* Previews Grid */}
                 {previews.length > 0 && (
                     <div style={{ display: 'flex', gap: '10px', marginTop: '15px', overflowX:'auto', paddingBottom:'10px' }}>
                         {previews.map((src, idx) => (
                             <div key={idx} style={{ position: 'relative', flexShrink: 0 }}>
                                 <img src={src} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ccc' }} />
-                                <button 
-                                    type="button" 
-                                    onClick={() => removeImage(idx)}
-                                    style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize:'10px', display:'flex', alignItems:'center', justifyContent:'center' }}
-                                >
-                                    X
-                                </button>
+                                {idx === 0 && <span style={{position:'absolute', bottom:0, left:0, width:'100%', background:'rgba(0,0,0,0.7)', color:'#fff', fontSize:'9px', textAlign:'center', padding:'2px'}}>COVER</span>}
+                                <button type="button" onClick={() => removeImage(idx)} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', fontSize:'10px', display:'flex', alignItems:'center', justifyContent:'center' }}>X</button>
                             </div>
                         ))}
                     </div>
@@ -178,7 +169,6 @@ const Sell = () => {
             <button type="submit" style={buttonStyle} disabled={loading}>
                 {loading ? 'POSTING...' : 'PUBLISH LISTING'}
             </button>
-
         </form>
       </div>
       <style>{`body { background-color: #ffffffff; font-family: 'Lato', sans-serif; } input:focus, select:focus, textarea:focus { border-bottom: 2px solid #111 !important; }`}</style>
@@ -186,7 +176,7 @@ const Sell = () => {
   );
 };
 
-// ... Reuse styles from previous Sell.js ...
+// Styles
 const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' };
 const streetwearCard = { backgroundColor: '#ffffffff', border: '2px solid #b75784', boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', padding: '40px', width: '100%', maxWidth: '650px' };
 const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 5px 0', color: '#b75784', fontStyle: 'italic' };
