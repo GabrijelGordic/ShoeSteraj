@@ -40,18 +40,22 @@ export const AuthProvider = ({ children }) => {
         setUser(userRes.data);
     };
 
-    // 3. Logout Function (Corrected)
-    const logout = () => {
-        // 1. Attempt to tell server to destroy token
-        // We don't await this because we want to log out the user in the browser 
-        // even if the server is down or the token is already invalid.
-        api.post('/auth/token/logout/')
-            .then(() => console.log("Logged out from server"))
-            .catch(e => console.error("Server logout error", e));
-
-        // 2. Remove token from browser immediately so UI updates
-        localStorage.removeItem('token');
-        setUser(null);
+    // 3. Logout Function
+    const logout = async () => {
+        try {
+            // 1. Tell backend to destroy the token (while we still have it!)
+            await api.post('/auth/token/logout/');
+        } catch (err) {
+            // If token is already invalid/expired, just ignore the error
+            console.log("Logout backend error (harmless):", err);
+        } finally {
+            // 2. ALWAYS clear local storage and state
+            localStorage.removeItem('token');
+            setUser(null);
+            
+            // Remove the header from future requests
+            delete api.defaults.headers.common['Authorization'];
+        }
     };
 
     return (

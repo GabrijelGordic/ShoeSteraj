@@ -86,7 +86,7 @@ const Home = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffffff', minHeight: '100vh', paddingBottom: '50px' }}>
+    <div style={{ backgroundColor: '#ffffffff', minHeight: '100vh', paddingBottom: '50px'}}>
       <Meta /> 
 
       {/* HERO BANNER */}
@@ -266,8 +266,8 @@ const Home = () => {
         .custom-select:focus, .custom-input:focus { outline: none; border-color: #000; background-color: #fafafa; }
         .custom-input { width: 100%; padding: 12px 15px; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.95rem; color: #333; transition: all 0.2s ease; }
 
-        .product-card { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; cursor: pointer; }
-        .product-card:hover .product-image { transform: scale(1.05); }
+        .product-card { opacity: 0; animation: fadeInUp 0.5s ease-out forwards; cursor: pointer; border: 1px solid #b75784}
+        .product-card:hover .product-image { transform: scale(1.1); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
@@ -304,7 +304,7 @@ const imageStyle = {
 const brandStyle = { margin: '0 0 5px', color: '#764a6aff', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '700' };
 const titleStyle = { margin: '0 0 10px', fontFamily: '"Lato", sans-serif', fontSize: '1.2rem', fontWeight: '900', color: '#111' };
 const priceStyle = { margin: '0', fontFamily: '"Lato", sans-serif', fontSize: '1rem', fontWeight: 'bold', color: '#333' };
-const sellerStyle = { margin: '15px 0 0', fontSize: '0.8rem', color: '#aaa', fontStyle: 'italic' };
+const sellerStyle = { margin: '15px 0 0', fontSize: '1rem', color: '#000000ff', fontStyle: 'italic' };
 const pageBtn = { padding: '10px 20px', background: '#111', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.8rem' };
 
 export default Home;

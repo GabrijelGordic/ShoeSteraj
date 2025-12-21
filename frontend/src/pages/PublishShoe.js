@@ -181,15 +181,15 @@ const Sell = () => {
 
         </form>
       </div>
-      <style>{`body { background-color: #b1b1b1ff; font-family: 'Lato', sans-serif; } input:focus, select:focus, textarea:focus { border-bottom: 2px solid #111 !important; }`}</style>
+      <style>{`body { background-color: #ffffffff; font-family: 'Lato', sans-serif; } input:focus, select:focus, textarea:focus { border-bottom: 2px solid #111 !important; }`}</style>
     </div>
   );
 };
 
 // ... Reuse styles from previous Sell.js ...
 const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' };
-const streetwearCard = { backgroundColor: '#ddddddff', border: '2px solid #111', boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', padding: '40px', width: '100%', maxWidth: '650px' };
-const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 5px 0', color: '#111', fontStyle: 'italic' };
+const streetwearCard = { backgroundColor: '#ffffffff', border: '2px solid #b75784', boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', padding: '40px', width: '100%', maxWidth: '650px' };
+const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 5px 0', color: '#b75784', fontStyle: 'italic' };
 const subHeadingStyle = { fontFamily: '"Lato", sans-serif', color: '#888', fontSize: '0.9rem', margin: 0, letterSpacing: '2px', fontWeight: '700' };
 const rowStyle = { display: 'flex', gap: '20px', marginBottom: '10px' };
 const groupStyle = { display: 'flex', flexDirection: 'column', flex: 1, marginBottom: '20px' };

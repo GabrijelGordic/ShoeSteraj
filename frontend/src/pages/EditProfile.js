@@ -4,31 +4,49 @@ import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
 import { Country, City } from 'country-state-city';
 
-// --- FIX: MOVE COUNTRIES LIST OUTSIDE THE COMPONENT ---
-// This prevents it from being "re-created" on every render,
-// so useEffect doesn't think it's a changing dependency.
+// Prevent re-creation of country list on re-renders
 const COUNTRIES_LIST = Country.getAllCountries().sort((a, b) => a.name.localeCompare(b.name));
+// Sort phone codes numerically
+const PHONE_CODES = [...COUNTRIES_LIST].sort((a, b) => parseInt(a.phonecode) - parseInt(b.phonecode));
 
 const EditProfile = () => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   
+  // UI State
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
+  // Form State
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
-    username: ''
+    username: '',
+    bio: '' 
   });
 
+  // Location & Phone State
   const [countryCode, setCountryCode] = useState('');
   const [countryName, setCountryName] = useState('');
   const [city, setCity] = useState('');
+  const [dialCode, setDialCode] = useState(''); 
+  const [phoneDigits, setPhoneDigits] = useState('');
 
-  // Cities still depend on the selected countryCode, so keep this here.
-  // We use useMemo so it only recalculates when countryCode changes.
+  // Avatar State
+  const [avatar, setAvatar] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  // Password State
+  const [passLoading, setPassLoading] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+      current_password: '',
+      new_password: '',
+      re_new_password: ''
+  });
+  const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
+
+  // Memoize Cities to prevent lag
   const cities = useMemo(() => {
       return countryCode 
         ? City.getCitiesOfCountry(countryCode).sort((a, b) => a.name.localeCompare(b.name)) 
@@ -37,47 +55,70 @@ const EditProfile = () => {
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        username: user.username || ''
-      });
+        // Fetch full profile data
+        api.get(`/api/profiles/${user.username}/`)
+            .then(res => {
+                const data = res.data;
+                
+                setFormData({
+                    first_name: user.first_name || '',
+                    last_name: user.last_name || '',
+                    email: user.email || '',
+                    username: user.username || '',
+                    bio: data.bio || ''
+                });
 
-      if (user.location) {
-          const parts = user.location.split(',');
-          if (parts.length >= 2) {
-              const existingCity = parts[0].trim();
-              const existingCountry = parts[1].trim();
+                // Avatar
+                if (data.avatar && !data.avatar.includes('default')) {
+                    setPreview(data.avatar);
+                }
 
-              // Use the static COUNTRIES_LIST here
-              const foundCountry = COUNTRIES_LIST.find(c => c.name === existingCountry);
-              if (foundCountry) {
-                  setCountryCode(foundCountry.isoCode);
-                  setCountryName(foundCountry.name);
-                  setCity(existingCity);
-              }
-          }
-      }
+                // Location
+                if (data.location) {
+                    const parts = data.location.split(',');
+                    if (parts.length >= 2) {
+                        const existingCity = parts[0].trim();
+                        const existingCountry = parts[1].trim();
+                        const foundCountry = COUNTRIES_LIST.find(c => c.name === existingCountry);
+                        if (foundCountry) {
+                            setCountryCode(foundCountry.isoCode);
+                            setCountryName(foundCountry.name);
+                            setCity(existingCity);
+                            if (!data.phone_number) setDialCode(foundCountry.phonecode);
+                        }
+                    }
+                }
+
+                // Phone
+                if (data.phone_number) {
+                    const raw = data.phone_number.replace('+', '');
+                    const matchedCountry = PHONE_CODES.find(c => raw.startsWith(c.phonecode));
+                    if (matchedCountry) {
+                        setDialCode(matchedCountry.phonecode);
+                        setPhoneDigits(raw.replace(matchedCountry.phonecode, ''));
+                    } else {
+                        setPhoneDigits(raw);
+                    }
+                }
+            })
+            .catch(err => console.error("Error fetching profile:", err));
+    } else {
+        // Redirect if not logged in (handled by AuthContext generally, but good backup)
+        // navigate('/login');
     }
-  }, [user]); // No need to add COUNTRIES_LIST here because it's outside the component
+  }, [user]);
 
-  // SAFE GUARD HANDLER
   const handleCountryChange = (e) => {
       const code = e.target.value;
-      
       if (!code) {
-          setCountryCode('');
-          setCountryName('');
-          setCity('');
-          return;
+          setCountryCode(''); setCountryName(''); setCity(''); return;
       }
-      
       const cData = Country.getCountryByCode(code);
       if (cData) {
         setCountryCode(code);
         setCountryName(cData.name);
         setCity('');
+        if (!phoneDigits) setDialCode(cData.phonecode);
       }
   };
 
@@ -85,30 +126,52 @@ const EditProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ... existing imports
+  const handleFileChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+          setAvatar(file);
+          setPreview(URL.createObjectURL(file));
+      }
+  };
 
+  const handlePasswordChange = (e) => {
+      setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  };
+
+  const renderAvatarPreview = () => {
+      if (preview) return <img src={preview} alt="preview" style={avatarStyle} />;
+      return <div style={initialsAvatar}>{user?.username.charAt(0).toUpperCase()}</div>;
+  };
+
+  // --- SUBMIT ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSuccessMsg('');
 
     const fullLocation = countryName && city ? `${city}, ${countryName}` : '';
+    const fullPhoneNumber = dialCode && phoneDigits ? `+${dialCode}${phoneDigits}` : '';
+
+    const uploadData = new FormData();
+    uploadData.append('first_name', formData.first_name);
+    uploadData.append('last_name', formData.last_name);
+    uploadData.append('email', formData.email);
+    uploadData.append('bio', formData.bio);
+    uploadData.append('location', fullLocation);
+    uploadData.append('phone_number', fullPhoneNumber);
+
+    if (avatar) {
+        uploadData.append('avatar', avatar);
+    }
 
     try {
-      await api.patch('/auth/users/me/', {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        location: fullLocation
+      await api.patch('/auth/users/me/', uploadData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      setSuccessMsg('Profile updated successfully.');
+      setSuccessMsg('Details saved successfully.');
       setLoading(false);
-      
-      // FIX 1: Force a reload so the AuthContext gets the new Location immediately
-      setTimeout(() => {
-          window.location.reload(); 
-      }, 1000);
+      setTimeout(() => { window.location.reload(); }, 1000);
 
     } catch (err) {
       console.error(err);
@@ -117,113 +180,192 @@ const EditProfile = () => {
     }
   };
 
+  const handlePasswordSubmit = async (e) => {
+      e.preventDefault();
+      setPasswordMsg({ type: '', text: '' });
+
+      if (passwordData.new_password !== passwordData.re_new_password) {
+          setPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
+          return;
+      }
+
+      setPassLoading(true);
+
+      try {
+          await api.post('/auth/users/set_password/', passwordData);
+          setPasswordMsg({ type: 'success', text: 'Password updated successfully.' });
+          setPasswordData({ current_password: '', new_password: '', re_new_password: '' });
+          setPassLoading(false);
+      } catch (err) {
+          console.error(err);
+          const errorData = err.response?.data;
+          let errorText = 'Failed to update password.';
+          if (errorData?.current_password) errorText = 'Current password is incorrect.';
+          else if (errorData?.new_password) errorText = errorData.new_password[0];
+          setPasswordMsg({ type: 'error', text: errorText });
+          setPassLoading(false);
+      }
+  };
+
   return (
-    <div style={pageWrapper}>
-      <div style={streetwearCard}>
+    <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', padding: '60px 20px' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         
-        <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-            <h1 style={headingStyle}>Settings</h1>
-            <p style={subHeadingStyle}>UPDATE YOUR PERSONAL DETAILS.</p>
+        <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+            <h1 style={titleStyle}>ACCOUNT SETTINGS</h1>
+            <p style={subtitleStyle}>MANAGE YOUR PERSONAL DETAILS & SECURITY.</p>
         </div>
 
-        {successMsg && <div style={successBanner}>{successMsg}</div>}
-
-        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+        <form onSubmit={handleSubmit} style={{ width: '100%', marginBottom: '60px' }}>
+            {successMsg && <div style={{...msgBase, backgroundColor: '#f0fdf4', color: '#15803d', borderColor: '#bbf7d0'}}>{successMsg}</div>}
             
-            <div style={groupStyle}>
-                <label style={labelStyle}>USERNAME</label>
-                <input type="text" value={formData.username} disabled style={{...inputStyle, opacity: 0.5, cursor: 'not-allowed', borderBottom: '1px dashed #999'}} />
-                <span style={{fontSize:'0.7rem', color:'#888', marginTop:'5px', display:'block', fontFamily:'Lato'}}>Username cannot be changed.</span>
-            </div>
-
-            <div style={rowStyle}>
-                <div style={groupStyle}>
-                    <label style={labelStyle}>FIRST NAME</label>
-                    <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} style={inputStyle} placeholder="ENTER FIRST NAME"/>
-                </div>
-                <div style={groupStyle}>
-                    <label style={labelStyle}>LAST NAME</label>
-                    <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} style={inputStyle} placeholder="ENTER LAST NAME"/>
-                </div>
-            </div>
-
-            <div style={groupStyle}>
-                <label style={labelStyle}>EMAIL ADDRESS</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} style={inputStyle} placeholder="ENTER EMAIL"/>
-            </div>
-
-            {/* LOCATION */}
-            <div style={rowStyle}>
-                <div style={groupStyle}>
-                    <label style={labelStyle}>COUNTRY</label>
-                    <div style={selectWrapper}>
-                        <select value={countryCode} onChange={handleCountryChange} style={selectStyle}>
-                            <option value="">SELECT COUNTRY</option>
-                            {COUNTRIES_LIST.map((c) => (
-                                <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
-                            ))}
-                        </select>
+            <div style={sectionBox}>
+                <h3 style={sectionTitle}>IDENTITY</h3>
+                
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '30px', gap: '20px' }}>
+                    {renderAvatarPreview()}
+                    <div>
+                        <label style={uploadBtn}>
+                            CHANGE PHOTO
+                            <input type="file" onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
+                        </label>
+                        <p style={{ margin: '5px 0 0 0', fontSize: '0.75rem', color: '#999' }}>JPG, PNG. Max 2MB.</p>
                     </div>
                 </div>
 
-                <div style={groupStyle}>
-                    <label style={labelStyle}>CITY</label>
-                    <div style={selectWrapper}>
-                        <select value={city} onChange={(e) => setCity(e.target.value)} style={selectStyle} disabled={!countryCode}>
-                            <option value="">{countryCode ? "SELECT CITY" : "CHOOSE COUNTRY FIRST"}</option>
-                            {cities.map((c) => (
-                                <option key={c.name} value={c.name}>{c.name}</option>
-                            ))}
-                        </select>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>USERNAME</label>
+                    <input type="text" value={formData.username} disabled className="custom-input" style={{ backgroundColor: '#f9f9f9', color: '#999', cursor: 'not-allowed' }} />
+                </div>
+
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>FIRST NAME</label>
+                        <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} className="custom-input" placeholder="First Name" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>LAST NAME</label>
+                        <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} className="custom-input" placeholder="Last Name" />
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>EMAIL ADDRESS</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className="custom-input" placeholder="your@email.com" />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>BIO</label>
+                    <textarea name="bio" value={formData.bio} onChange={handleChange} rows="3" className="custom-input" placeholder="Tell others about yourself..." />
+                </div>
+            </div>
+
+            <div style={sectionBox}>
+                <h3 style={sectionTitle}>LOCATION & CONTACT</h3>
+                
+                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>COUNTRY</label>
+                        <div className="custom-select-wrapper">
+                            <select value={countryCode} onChange={handleCountryChange} className="custom-select">
+                                <option value="">Select Country</option>
+                                {COUNTRIES_LIST.map((c) => (
+                                    <option key={c.isoCode} value={c.isoCode}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>CITY</label>
+                        <div className="custom-select-wrapper">
+                            <select value={city} onChange={(e) => setCity(e.target.value)} className="custom-select" disabled={!countryCode} style={{ opacity: !countryCode ? 0.5 : 1 }}>
+                                <option value="">{countryCode ? "Select City" : "..."}</option>
+                                {cities.map((c) => (
+                                    <option key={c.name} value={c.name}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>PHONE NUMBER (WHATSAPP)</label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ width: '130px', position: 'relative' }}>
+                            <select value={dialCode} onChange={(e) => setDialCode(e.target.value)} className="custom-select" style={{ paddingRight: '0' }}>
+                                <option value="">Code</option>
+                                {PHONE_CODES.map((c) => (
+                                    <option key={c.isoCode} value={c.phonecode}>+{c.phonecode} ({c.isoCode})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <input type="tel" className="custom-input" placeholder="91 123 4567" value={phoneDigits} onChange={(e) => setPhoneDigits(e.target.value)} style={{ flex: 1 }} />
                     </div>
                 </div>
             </div>
 
-            <button type="submit" style={saveBtn} disabled={loading}>
-                {loading ? 'SAVING...' : 'SAVE CHANGES'}
-            </button>
-
-            <div style={divider}></div>
-
-            <div style={{textAlign: 'center'}}>
-                <button type="button" onClick={() => { logout(); navigate('/'); }} style={logoutBtn}>
-                    LOG OUT
-                </button>
-            </div>
-
+            <button type="submit" style={saveBtn} disabled={loading}>{loading ? 'SAVING...' : 'SAVE DETAILS'}</button>
         </form>
+
+        <div style={{ height: '1px', backgroundColor: '#eee', marginBottom: '60px' }}></div>
+
+        <form onSubmit={handlePasswordSubmit} style={{ width: '100%' }}>
+            <div style={sectionBox}>
+                <h3 style={sectionTitle}>SECURITY</h3>
+                {passwordMsg.text && (
+                    <div style={{...msgBase, backgroundColor: passwordMsg.type === 'error' ? '#fef2f2' : '#f0fdf4', color: passwordMsg.type === 'error' ? '#991b1b' : '#15803d', borderColor: passwordMsg.type === 'error' ? '#fecaca' : '#bbf7d0'}}>
+                        {passwordMsg.text}
+                    </div>
+                )}
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>CURRENT PASSWORD</label>
+                    <input type="password" name="current_password" value={passwordData.current_password} onChange={handlePasswordChange} className="custom-input" placeholder="Required for security" required />
+                </div>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>NEW PASSWORD</label>
+                        <input type="password" name="new_password" value={passwordData.new_password} onChange={handlePasswordChange} className="custom-input" placeholder="New Password" required minLength="8" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>CONFIRM NEW</label>
+                        <input type="password" name="re_new_password" value={passwordData.re_new_password} onChange={handlePasswordChange} className="custom-input" placeholder="Repeat New Password" required />
+                    </div>
+                </div>
+            </div>
+            <button type="submit" style={{...saveBtn, backgroundColor: '#b75784'}} disabled={passLoading}>{passLoading ? 'UPDATING...' : 'UPDATE PASSWORD'}</button>
+        </form>
+
+        <div style={{ marginTop: '60px', textAlign: 'center', borderTop: '1px solid #eee', paddingTop: '30px' }}>
+            <p style={{ fontFamily: 'Lato', fontSize: '0.8rem', color: '#888', marginBottom: '10px' }}>DONE FOR NOW?</p>
+            <button type="button" onClick={() => { logout(); navigate('/'); }} style={logoutBtn}>LOG OUT</button>
+        </div>
       </div>
       <style>{`
-        body { background-color: #b1b1b1ff; font-family: 'Lato', sans-serif; }
-        input:focus, select:focus { border-bottom: 2px solid #111 !important; background-color: rgba(255,255,255,0.3); }
-        input::placeholder { color: #555; font-weight: 300; font-size: 0.8rem; }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+        body { font-family: 'Lato', sans-serif; }
+        .custom-select-wrapper { position: relative; width: 100%; }
+        .custom-select { width: 100%; padding: 12px 15px; appearance: none; -webkit-appearance: none; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.9rem; font-weight: 500; color: #333; cursor: pointer; transition: all 0.2s ease; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
+        .custom-select:focus, .custom-input:focus { outline: none; border-color: #000; background-color: #fafafa; }
+        .custom-input { width: 100%; padding: 12px 15px; background-color: #fff; border: 1px solid #e0e0e0; border-radius: 0px; font-family: 'Lato', sans-serif; fontSize: 0.95rem; color: #333; transition: all 0.2s ease; }
+        .custom-input::placeholder { color: #aaa; font-weight: 400; }
+        textarea.custom-input { font-family: 'Lato', sans-serif; }
       `}</style>
     </div>
   );
 };
 
 // --- STYLES ---
-const pageWrapper = { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' };
-const streetwearCard = { backgroundColor: '#ddddddff', border: '2px solid #111', boxShadow: '8px 8px 0px rgba(0,0,0,0.15)', padding: '40px', width: '100%', maxWidth: '500px' };
-const headingStyle = { fontFamily: '"Playfair Display", serif', fontSize: '2.5rem', margin: '0 0 5px 0', color: '#111', fontStyle: 'italic' };
-const subHeadingStyle = { fontFamily: '"Lato", sans-serif', color: '#888', fontSize: '0.9rem', margin: 0, letterSpacing: '2px', fontWeight: '700' };
-const successBanner = { backgroundColor: '#e8f5e9', color: '#2e7d32', padding: '15px', marginBottom: '20px', border: '1px solid #c8e6c9', textAlign: 'center', fontFamily: 'Lato', fontWeight: 'bold' };
-const rowStyle = { display: 'flex', gap: '20px' };
-const groupStyle = { display: 'flex', flexDirection: 'column', flex: 1, marginBottom: '25px' };
-const labelStyle = { display: 'block', fontSize: '0.9rem', color: '#111', letterSpacing: '1px', marginBottom: '8px', fontWeight: '900', fontFamily: 'Lato' };
-const inputStyle = { width: '100%', border: 'none', borderBottom: '1px solid #999', padding: '12px 0', fontSize: '1rem', outline: 'none', transition: 'all 0.3s ease', fontFamily: '"Lato", sans-serif', backgroundColor: 'transparent', fontWeight: 'bold', color: '#111' };
-const selectWrapper = { position: 'relative', width: '100%' };
-const selectStyle = { 
-    ...inputStyle, 
-    cursor: 'pointer', 
-    appearance: 'none', 
-    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, 
-    backgroundRepeat: 'no-repeat', 
-    backgroundPosition: 'right 0 center', 
-    backgroundSize: '16px' 
-};
-const saveBtn = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: '2px solid #111', fontSize: '0.9rem', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', marginTop: '10px', textTransform: 'uppercase' };
-const divider = { height: '1px', backgroundColor: '#999', margin: '30px 0', opacity: 0.5 };
-const logoutBtn = { background: 'none', border: 'none', color: '#d32f2f', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Lato', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' };
+const titleStyle = { fontFamily: '"Bebas Neue", sans-serif', fontSize: '4rem', margin: '0 0 5px 0', color: '#111', lineHeight: '0.9', letterSpacing: '2px' };
+const subtitleStyle = { fontFamily: '"Lato", sans-serif', color: '#b75784', fontSize: '0.9rem', margin: 0, letterSpacing: '2px', fontWeight: '700', textTransform: 'uppercase' };
+const sectionBox = { marginBottom: '40px' };
+const sectionTitle = { fontFamily: '"Bebas Neue", sans-serif', fontSize: '1.5rem', color: '#111', margin: '0 0 20px 0', letterSpacing: '1px', borderBottom: '2px solid #111', display: 'inline-block', paddingBottom: '5px' };
+const labelStyle = { display: 'block', fontSize: '0.75rem', color: '#555', letterSpacing: '1px', marginBottom: '8px', fontWeight: '900', fontFamily: 'Lato', textTransform: 'uppercase' };
+const avatarStyle = { width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #ccc' };
+const initialsAvatar = { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#b75784', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 'bold', fontFamily: '"Bebas Neue", sans-serif', border: '2px solid #fff', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' };
+const uploadBtn = { display: 'inline-block', backgroundColor: '#eee', padding: '8px 15px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer', border: '1px solid #ccc', textTransform: 'uppercase', transition: 'background 0.2s' };
+const saveBtn = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: 'none', fontSize: '0.9rem', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', textTransform: 'uppercase', transition: 'background-color 0.2s' };
+const logoutBtn = { background: 'none', border: '1px solid #d32f2f', color: '#d32f2f', padding: '10px 20px', fontSize: '0.8rem', cursor: 'pointer', fontFamily: 'Lato', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase', transition: 'all 0.2s' };
+const msgBase = { marginBottom:'30px', padding: '15px', border: '1px solid', textAlign: 'center', fontFamily: 'Lato', fontWeight:'bold' };
 
 export default EditProfile;

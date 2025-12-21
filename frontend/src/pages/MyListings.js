@@ -121,7 +121,7 @@ const MyListings = () => {
 const styles = {
   container: {
     padding: '60px 40px',
-    backgroundColor: '#b1b1b1ff', 
+    backgroundColor: '#ffffffff', 
     minHeight: '100vh',
   },
   header: {
@@ -152,6 +152,7 @@ const styles = {
   card: {
     backgroundColor: 'transparent',
     cursor: 'default',
+    
   },
   imageContainer: {
     overflow: 'hidden',
@@ -162,6 +163,7 @@ const styles = {
     justifyContent: 'center',
     marginBottom: '15px',
     boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
+    border: '1px solid #b75784',
   },
   // --- FIXED SECTION ---
   image: { 
@@ -177,7 +179,7 @@ const styles = {
   },
   brand: {
     margin: '0 0 5px',
-    color: '#555',
+    color: '#b75784',
     fontSize: '0.8rem',
     textTransform: 'uppercase',
     letterSpacing: '2px',
@@ -201,8 +203,8 @@ const styles = {
   },
   deleteBtn: {
       backgroundColor: 'transparent',
-      border: '2px solid #d32f2f',
-      color: '#d32f2f',
+      border: '2px solid #b75784',
+      color: '#b75784',
       padding: '10px 20px',
       fontSize: '0.8rem',
       fontWeight: '900',
