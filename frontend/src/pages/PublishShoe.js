@@ -40,7 +40,13 @@ const Sell = () => {
     Object.keys(formData).forEach(key => data.append(key, formData[key]));
 
     if (files.length > 0) {
-        data.append('image', files[0]); // First image is cover
+        // 1. Send the FIRST image as the main 'image' (Required by model)
+        data.append('image', files[0]); 
+
+        // 2. Send the REST of the images as 'uploaded_images' (For the gallery)
+        for (let i = 1; i < files.length; i++) {
+            data.append('uploaded_images', files[i]);
+        }
     } else {
         alert("Please add at least one photo.");
         setLoading(false);
@@ -48,7 +54,6 @@ const Sell = () => {
     }
 
     try {
-      // FIX: Changed from '/shoes/' back to '/api/shoes/' to match your logs
       await api.post('/api/shoes/', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });

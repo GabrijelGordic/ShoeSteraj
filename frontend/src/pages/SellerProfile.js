@@ -9,7 +9,17 @@ const SellerProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // --- REVIEW FORM STATE ---
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   useEffect(() => {
+    fetchProfile();
+  }, [username]);
+
+  const fetchProfile = () => {
     api.get(`/api/profiles/${username}/`)
       .then(res => {
         setProfile(res.data);
@@ -19,7 +29,29 @@ const SellerProfile = () => {
         console.error("Error fetching profile:", err);
         setLoading(false);
       });
-  }, [username]);
+  };
+
+  const handleReviewSubmit = async (e) => {
+      e.preventDefault();
+      setReviewLoading(true);
+      try {
+          await api.post('/api/reviews/', {
+              seller_username: username, // We send the username, backend finds the ID
+              rating: rating,
+              comment: comment
+          });
+          // Refresh profile to show new review
+          setIsReviewing(false);
+          setComment('');
+          setRating(5);
+          fetchProfile(); 
+      } catch (err) {
+          console.error(err);
+          alert('Failed to submit review.');
+      } finally {
+          setReviewLoading(false);
+      }
+  };
 
   const getAvatarContent = () => {
       if (!profile) return null;
@@ -36,6 +68,8 @@ const SellerProfile = () => {
 
   if (loading) return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'80vh' }}>LOADING...</div>;
   if (!profile) return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'80vh' }}>USER NOT FOUND.</div>;
+
+  const isOwnProfile = user && user.username === profile.username;
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', padding: '60px 20px' }}>
@@ -55,10 +89,16 @@ const SellerProfile = () => {
                         </div>
                     </div>
                     
-                    {/* EDIT BUTTON */}
-                    {user && user.username === profile.username && (
-                        <Link to="/edit-profile" style={editBtnStyle}>EDIT PROFILE</Link>
-                    )}
+                    {/* BUTTONS: EDIT or WRITE REVIEW */}
+                    <div>
+                        {isOwnProfile ? (
+                            <Link to="/edit-profile" style={btnStyle}>EDIT PROFILE</Link>
+                        ) : (
+                            user && !isReviewing && (
+                                <button onClick={() => setIsReviewing(true)} style={btnStyle}>WRITE REVIEW</button>
+                            )
+                        )}
+                    </div>
                 </div>
                 {profile.bio && <p style={bioStyle}>"{profile.bio}"</p>}
                 
@@ -77,7 +117,47 @@ const SellerProfile = () => {
 
         <div style={divider}></div>
 
-        {/* --- REVIEWS SECTION --- */}
+        {/* --- REVIEW FORM --- */}
+        {isReviewing && (
+            <div style={reviewFormCard}>
+                <h3 style={{marginTop:0, fontFamily:'Bebas Neue', fontSize:'1.5rem'}}>LEAVE A REVIEW FOR @{profile.username}</h3>
+                <form onSubmit={handleReviewSubmit}>
+                    <div style={{marginBottom:'15px'}}>
+                        <label style={{display:'block', fontSize:'0.8rem', fontWeight:'bold', marginBottom:'5px'}}>RATING</label>
+                        <select 
+                            value={rating} 
+                            onChange={(e) => setRating(parseInt(e.target.value))}
+                            style={inputStyle}
+                        >
+                            <option value="5">★★★★★ (5) - Excellent</option>
+                            <option value="4">★★★★☆ (4) - Good</option>
+                            <option value="3">★★★☆☆ (3) - Average</option>
+                            <option value="2">★★☆☆☆ (2) - Poor</option>
+                            <option value="1">★☆☆☆☆ (1) - Terrible</option>
+                        </select>
+                    </div>
+                    <div style={{marginBottom:'15px'}}>
+                         <label style={{display:'block', fontSize:'0.8rem', fontWeight:'bold', marginBottom:'5px'}}>COMMENT</label>
+                         <textarea 
+                            rows="3" 
+                            style={{...inputStyle, resize:'vertical'}}
+                            placeholder="How was your experience?"
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            required
+                         ></textarea>
+                    </div>
+                    <div style={{display:'flex', gap:'10px'}}>
+                        <button type="submit" style={submitBtnStyle} disabled={reviewLoading}>
+                            {reviewLoading ? 'POSTING...' : 'SUBMIT REVIEW'}
+                        </button>
+                        <button type="button" onClick={() => setIsReviewing(false)} style={cancelBtnStyle}>CANCEL</button>
+                    </div>
+                </form>
+            </div>
+        )}
+
+        {/* --- REVIEWS LIST --- */}
         <h2 style={sectionTitle}>REVIEWS ({profile.review_count || 0})</h2>
 
         {profile.reviews_list && profile.reviews_list.length > 0 ? (
@@ -125,15 +205,14 @@ const statsRow = { display: 'flex', gap: '40px' };
 const statItem = { display: 'flex', flexDirection: 'column' };
 const statValue = { fontSize: '1.5rem', fontWeight: '900', color: '#111' };
 const statLabel = { fontSize: '0.75rem', color: '#888', fontWeight: 'bold', letterSpacing: '1px' };
-const editBtnStyle = { textDecoration: 'none', backgroundColor: '#f5f5f5', color: '#111', padding: '10px 20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', transition: 'background 0.2s' };
+const btnStyle = { textDecoration: 'none', backgroundColor: '#f5f5f5', color: '#111', padding: '10px 20px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', transition: 'background 0.2s', border:'none', cursor:'pointer' };
 const divider = { height: '1px', backgroundColor: '#eee', margin: '40px 0' };
 const sectionTitle = { fontFamily: '"Bebas Neue", sans-serif', fontSize: '2rem', marginBottom: '20px' };
 
-const reviewCard = {
-    backgroundColor: '#fafafa',
-    padding: '20px',
-    border: '1px solid #eee',
-    borderRadius: '4px'
-};
+const reviewCard = { backgroundColor: '#fafafa', padding: '20px', border: '1px solid #eee', borderRadius: '4px' };
+const reviewFormCard = { backgroundColor: '#fff', border: '2px solid #b75784', padding: '20px', marginBottom: '40px' };
+const inputStyle = { width: '100%', padding: '10px', border: '1px solid #ddd', fontFamily: 'Lato' };
+const submitBtnStyle = { backgroundColor: '#111', color: '#fff', border: 'none', padding: '10px 20px', fontWeight: 'bold', cursor: 'pointer' };
+const cancelBtnStyle = { backgroundColor: 'transparent', color: '#555', border: '1px solid #ccc', padding: '10px 20px', fontWeight: 'bold', cursor: 'pointer' };
 
 export default SellerProfile;

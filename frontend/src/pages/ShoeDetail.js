@@ -254,12 +254,39 @@ const ShoeDetail = () => {
         
         .main-img { width: 100%; height: 100%; object-fit: contain; padding: 20px; }
         
+        /* --- FIXED HEART BUTTON CSS --- */
         .heart-btn {
-            position: absolute; top: 20px; right: 20px; 
-            background: rgba(255,255,255,0.9); border: none; borderRadius: 50%;
-            width: 50px; height: 50px; cursor: pointer; 
-            display: flex; alignItems: center; justifyContent: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            
+            /* FORCE TRANSPARENCY & REMOVE BORDERS */
+            background-color: transparent !important; 
+            border: none !important; 
+            outline: none !important;
+            box-shadow: none !important;
+            
+            width: 50px; 
+            height: 50px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            
+            /* Remove mobile tap highlight */
+            -webkit-tap-highlight-color: transparent; 
+            
+            transition: transform 0.2s;
+        }
+        
+        .heart-btn:active {
+            transform: scale(0.9);
+            background-color: transparent !important;
+        }
+        
+        .heart-btn:focus {
+            outline: none !important;
+            background-color: transparent !important;
         }
 
         /* --- MOBILE OPTIMIZATION (@media) --- */
@@ -288,7 +315,7 @@ const ShoeDetail = () => {
   );
 };
 
-// --- STATIC STYLES (Text properties usually don't need media queries) ---
+// --- STATIC STYLES ---
 const thumbnailGrid = { display: 'flex', gap: '15px', overflowX: 'auto' };
 const thumbContainer = { width: '80px', height: '80px', cursor: 'pointer', padding: '5px', backgroundColor:'#fff', transition: 'all 0.2s' };
 const thumbImgStyle = { width: '100%', height: '100%', objectFit: 'contain' };
