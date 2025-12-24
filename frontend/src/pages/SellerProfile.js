@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
@@ -15,11 +15,8 @@ const SellerProfile = () => {
   const [comment, setComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  useEffect(() => {
-    fetchProfile();
-  }, [username]);
-
-  const fetchProfile = () => {
+  // FIX: Wrap fetchProfile in useCallback to stabilize the function reference
+  const fetchProfile = useCallback(() => {
     api.get(`/api/profiles/${username}/`)
       .then(res => {
         setProfile(res.data);
@@ -29,14 +26,19 @@ const SellerProfile = () => {
         console.error("Error fetching profile:", err);
         setLoading(false);
       });
-  };
+  }, [username]); // Only recreate this function if 'username' changes
+
+  // FIX: Now we can safely include fetchProfile in the dependency array
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleReviewSubmit = async (e) => {
       e.preventDefault();
       setReviewLoading(true);
       try {
           await api.post('/api/reviews/', {
-              seller_username: username, // We send the username, backend finds the ID
+              seller_username: username, 
               rating: rating,
               comment: comment
           });
