@@ -34,13 +34,8 @@ INSTALLED_APPS = [
 
     # Third Party
     "rest_framework",
-    "rest_framework.authtoken",
-    "djoser",
     "corsheaders",
     "django_filters",
-
-    # Email (Brevo API via Anymail)
-    "anymail",
 
     # Apps
     "users",
@@ -151,42 +146,16 @@ CSRF_TRUSTED_ORIGINS = [
 # -----------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        # We will create this class in the next step
+        "config.authentication.SupabaseAuthentication", 
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 12,
-    "FORMAT_SUFFIX_PATTERNS": False,
 }
 
-# -----------------------------------------------------------------------------
-# DJOSER
-# -----------------------------------------------------------------------------
-DJOSER = {
-    "USER_ID_FIELD": "username",
-    "LOGIN_FIELD": "username",
-    "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
-    "SEND_ACTIVATION_EMAIL": False,
-    "SERIALIZERS": {
-        'user_create': 'users.serializers.UserCreateSerializer',
-        'user': 'users.serializers.UserSerializer',
-        'current_user': 'users.serializers.UserSerializer',
-    },
-}
-
-# -----------------------------------------------------------------------------
-# EMAIL (BREVO API)
-# -----------------------------------------------------------------------------
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-ANYMAIL = {
-    "BREVO_API_KEY": config("BREVO_API_KEY", default=""),
-}
-
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@shoesteraj.com")
-EMAIL_TIMEOUT = config("EMAIL_TIMEOUT", default=15, cast=int)
 
 # -----------------------------------------------------------------------------
 # LOGGING
@@ -209,11 +178,7 @@ LOGGING = {
             "handlers": ["console"],
             "level": "INFO",
         },
-        "anymail": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False
-        },
+       
     },
 }
 
@@ -236,3 +201,9 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+# -----------------------------------------------------------------------------
+# SUPABASE SETTINGS
+SUPABASE_URL = config("SUPABASE_URL", default="")
+SUPABASE_KEY = config("SUPABASE_KEY", default="")
+# You can keep JWT_SECRET, but we won't use it for this new method
+SUPABASE_JWT_SECRET = config("SUPABASE_JWT_SECRET", default="")

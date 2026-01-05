@@ -1,20 +1,17 @@
-import axios from "axios";
+import axios from 'axios';
+import { supabase } from '../supabase';
 
-// If the environment variable exists (Railway), use it.
-// Otherwise, fall back to localhost (Your Laptop).
-const API = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+const API = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const api = axios.create({ baseURL: API });
 
-const api = axios.create({
-  baseURL: API,
-});
-
-// Interceptor: attach token if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Token ${token}`;
-  }
-  return config;
+api.interceptors.request.use(async (config) => {
+    // ASK SUPABASE FOR THE CURRENT TOKEN
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+    }
+    return config;
 });
 
 export default api;

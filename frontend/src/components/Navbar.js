@@ -4,7 +4,8 @@ import AuthContext from '../context/AuthContext';
 import logo from '../assets/šuzeraj_logo.png';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
+  // 1. UPDATE: Destructure 'logoutUser' instead of 'logout'
+  const { user, logoutUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,6 +16,13 @@ const Navbar = () => {
   
   const dropdownRef = useRef(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // 2. HELPER: Get a safe display name (Supabase uses email, Django used username)
+  // If username is missing, we split the email (e.g. test@gmail.com -> test)
+  const displayName = user?.user_metadata?.username || user?.username || user?.email?.split('@')[0] || 'User';
+
+  // 3. HELPER: Get avatar from Supabase metadata if available
+  const userAvatar = user?.user_metadata?.avatar_url || user?.avatar;
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -45,8 +53,9 @@ const Navbar = () => {
       setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
-      logout();
+  const confirmLogout = async () => {
+      // 4. UPDATE: Call the new function name
+      await logoutUser();
       setShowLogoutModal(false);
       navigate('/');
   };
@@ -69,15 +78,17 @@ const Navbar = () => {
 
   const getAvatarContent = () => {
       if (!user) return null;
-      const isDefault = user.avatar && user.avatar.includes('default.jpg');
       
-      if (user.avatar && !isDefault) {
-          return <img src={user.avatar} alt="profile" className="avatar-img" />;
+      const isDefault = userAvatar && userAvatar.includes('default.jpg');
+      
+      if (userAvatar && !isDefault) {
+          return <img src={userAvatar} alt="profile" className="avatar-img" />;
       }
 
       return (
           <div className="avatar-placeholder">
-              {user.username.charAt(0).toUpperCase()}
+              {/* 5. UPDATE: Use the safe 'displayName' variable */}
+              {displayName.charAt(0).toUpperCase()}
           </div>
       );
   };
@@ -123,10 +134,11 @@ const Navbar = () => {
                                     <div className="dropdown-menu">
                                         <div className="user-info">
                                             <span style={{fontSize:'0.8rem', color:'#ffffffff'}}>Signed in as</span><br/>
-                                            <strong style={{color:'#b75784'}}>{user.username}</strong>
+                                            {/* UPDATE: Use displayName */}
+                                            <strong style={{color:'#b75784'}}>{displayName}</strong>
                                         </div>
                                         <Link to="/mylistings" className="menu-item" onClick={() => setShowDropdown(false)}>My Kicks</Link>
-                                        <Link to={`/seller/${user.username}`} className="menu-item" onClick={() => setShowDropdown(false)}>Public Profile</Link>
+                                        <Link to={`/seller/${displayName}`} className="menu-item" onClick={() => setShowDropdown(false)}>Public Profile</Link>
                                         <Link to="/edit-profile" className="menu-item" onClick={() => setShowDropdown(false)}>Settings</Link>
                                         <Link to="/wishlist" className="menu-item" onClick={() => setShowDropdown(false)}>My Wishlist</Link>
                                         <div className="divider"></div>
@@ -177,9 +189,10 @@ const Navbar = () => {
                         <>
                             <Link to="/sell" className="mobile-link highlight">SELL YOUR KICKS</Link>
                             <div className="mobile-divider"></div>
-                            <span className="mobile-label">ACCOUNT ({user.username})</span>
+                            {/* UPDATE: Use displayName */}
+                            <span className="mobile-label">ACCOUNT ({displayName})</span>
                             <Link to="/mylistings" className="mobile-link small">My Listings</Link>
-                            <Link to={`/seller/${user.username}`} className="mobile-link small">Public Profile</Link>
+                            <Link to={`/seller/${displayName}`} className="mobile-link small">Public Profile</Link>
                             <Link to="/edit-profile" className="mobile-link small">Settings</Link>
                             <Link to="/wishlist" className="mobile-link small">Wishlist</Link>
                             <button onClick={triggerLogout} className="mobile-link logout">Log Out</button>

@@ -1,14 +1,16 @@
 import React, { useState, useContext } from 'react';
-import AuthContext from '../context/AuthContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import AuthContext from '../context/AuthContext';
 
 const Login = () => {
-    const { login } = useContext(AuthContext);
+    // We use loginUser from the new Supabase AuthContext
+    const { loginUser } = useContext(AuthContext);
     const navigate = useNavigate();
     const location = useLocation(); 
     
     const successMsg = location.state?.successMessage;
-    const [formData, setFormData] = useState({ username: '', password: '' });
+    // Changed username -> email for Supabase
+    const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -19,10 +21,11 @@ const Login = () => {
         setError('');
         
         try {
-            await login(formData.username, formData.password);
+            // Supabase requires email to login
+            await loginUser(formData.email, formData.password);
             navigate('/'); 
         } catch (err) {
-            setError('Incorrect username or password.');
+            setError(err.message || 'Incorrect email or password.');
             setLoading(false);
         }
     };
@@ -44,15 +47,15 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit}>
                     
-                    {/* USERNAME */}
+                    {/* EMAIL (Changed from Username for Supabase) */}
                     <div style={{ marginBottom: '25px' }}>
-                        <label style={labelStyle}>USERNAME</label>
+                        <label style={labelStyle}>EMAIL</label>
                         <input 
-                            type="text" 
+                            type="email" 
                             className="custom-input"
-                            value={formData.username} 
-                            onChange={(e) => setFormData({...formData, username: e.target.value})} 
-                            placeholder="Enter username" 
+                            value={formData.email} 
+                            onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                            placeholder="Enter email" 
                             required 
                         />
                     </div>
@@ -111,7 +114,7 @@ const Login = () => {
                 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
                 body { font-family: 'Lato', sans-serif; }
 
-                /* INPUT STYLES (Matching Edit Profile) */
+                /* INPUT STYLES */
                 .custom-input { 
                     width: 100%; 
                     padding: 15px; 
