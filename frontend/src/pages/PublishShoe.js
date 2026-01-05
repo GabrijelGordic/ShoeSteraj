@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 const Sell = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null); // Hidden input for AI upload
+
+  // --- STATES ---
   const [loading, setLoading] = useState(false);
+  const [loadingAI, setLoadingAI] = useState(false);
   
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
   
   const [formData, setFormData] = useState({
-    title: '', brand: '', model: '', size: '', condition: '',
-    price: '', currency: 'EUR', description: ''
+    title: '', 
+    brand: '', 
+    model: '', 
+    size: '', 
+    condition: '',
+    price: '', 
+    currency: 'EUR', 
+    description: ''
   });
 
+  // --- HANDLERS ---
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleImageChange = (e) => {
@@ -32,6 +43,53 @@ const Sell = () => {
       setPreviews(previews.filter((_, i) => i !== index));
   };
 
+  // --- AI LOGIC ---
+  const triggerAIUpload = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleAIFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setLoadingAI(true);
+    
+    try {
+        const aiData = new FormData();
+        aiData.append('image', file);
+
+        // 1. FIX: Changed path from /market/ to /api/
+        const res = await api.post('/api/analyze-shoe/', aiData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        const data = res.data;
+
+        // Auto-fill the form
+        setFormData(prev => ({
+            ...prev,
+            brand: data.brand || '',
+            model: data.model || '',
+            description: data.description || '',
+            // Construct title
+            title: `${data.brand} ${data.model} ${data.color || ''}`.trim()
+        }));
+
+        // Add to gallery
+        const newFiles = [...files, file].slice(0, 5);
+        setFiles(newFiles);
+        setPreviews(newFiles.map(f => URL.createObjectURL(f)));
+
+    } catch (err) {
+        console.error("AI Error:", err);
+        alert('Could not analyze image. Please fill details manually.');
+    } finally {
+        setLoadingAI(false);
+        e.target.value = null; 
+    }
+  };
+
+  // --- SUBMIT LOGIC ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -40,10 +98,7 @@ const Sell = () => {
     Object.keys(formData).forEach(key => data.append(key, formData[key]));
 
     if (files.length > 0) {
-        // 1. Send the FIRST image as the main 'image' (Required by model)
         data.append('image', files[0]); 
-
-        // 2. Send the REST of the images as 'uploaded_images' (For the gallery)
         for (let i = 1; i < files.length; i++) {
             data.append('uploaded_images', files[i]);
         }
@@ -54,10 +109,11 @@ const Sell = () => {
     }
 
     try {
+      // 2. FIX: Changed path from /market/ to /api/
       await api.post('/api/shoes/', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      navigate('/', { state: { successMessage: 'LISTING PUBLISHED SUCCESSFULLY!' } });
+      navigate('/'); 
     } catch (err) {
       console.error(err);
       const msg = err.response?.data ? JSON.stringify(err.response.data) : 'Failed to list item.';
@@ -69,9 +125,32 @@ const Sell = () => {
   return (
     <div style={pageWrapper}>
       <div style={streetwearCard}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <h1 style={headingStyle}>Sell Your Kicks</h1>
-            <p style={subHeadingStyle}>ADD UP TO 5 PHOTOS.</p>
+        
+        {/* HEADER SECTION WITH AI BUTTON */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'40px' }}>
+            <div>
+                <h1 style={headingStyle}>Sell Your Kicks</h1>
+                <p style={subHeadingStyle}>ADD UP TO 5 PHOTOS.</p>
+            </div>
+            
+            {/* AI BUTTON */}
+            <div>
+                <input 
+                    type="file" 
+                    accept="image/*" 
+                    style={{display: 'none'}} 
+                    ref={fileInputRef}
+                    onChange={handleAIFileChange}
+                />
+                <button 
+                    type="button" 
+                    onClick={triggerAIUpload} 
+                    disabled={loadingAI}
+                    style={aiButtonStyle}
+                >
+                    {loadingAI ? 'ANALYZING...' : '✨ AUTO-FILL'}
+                </button>
+            </div>
         </div>
 
         <form onSubmit={handleSubmit} style={{ width: '100%' }}>
@@ -79,12 +158,12 @@ const Sell = () => {
              <div style={rowStyle}>
                 <div style={groupStyle}>
                     <label style={labelStyle}>AD TITLE:</label>
-                    <input type="text" name="title" placeholder="E.G. JORDAN 1 CHICAGO" onChange={handleChange} required style={inputStyle} />
+                    <input type="text" name="title" value={formData.title} placeholder="E.G. JORDAN 1 CHICAGO" onChange={handleChange} required style={inputStyle} />
                 </div>
                 <div style={groupStyle}>
                     <label style={labelStyle}>BRAND:</label>
                     <div style={selectWrapper}>
-                        <select name="brand" onChange={handleChange} required style={selectStyle}>
+                        <select name="brand" value={formData.brand} onChange={handleChange} required style={selectStyle}>
                             <option value="">SELECT BRAND</option>
                             <option value="Nike">Nike</option>
                             <option value="Adidas">Adidas</option>
@@ -103,11 +182,11 @@ const Sell = () => {
             <div style={rowStyle}>
                 <div style={groupStyle}>
                     <label style={labelStyle}>MODEL:</label>
-                    <input type="text" name="model" placeholder="E.G. RETRO HIGH" onChange={handleChange} required style={inputStyle} />
+                    <input type="text" name="model" value={formData.model} placeholder="E.G. RETRO HIGH" onChange={handleChange} required style={inputStyle} />
                 </div>
                 <div style={groupStyle}>
                     <label style={labelStyle}>SIZE (EU):</label>
-                    <input type="number" step="0.5" name="size" placeholder="42.5" onChange={handleChange} required style={inputStyle} />
+                    <input type="number" step="0.5" name="size" value={formData.size} placeholder="42.5" onChange={handleChange} required style={inputStyle} />
                 </div>
             </div>
 
@@ -116,7 +195,7 @@ const Sell = () => {
                 <div style={groupStyle}>
                     <label style={labelStyle}>CONDITION:</label>
                     <div style={selectWrapper}>
-                        <select name="condition" onChange={handleChange} required style={selectStyle}>
+                        <select name="condition" value={formData.condition} onChange={handleChange} required style={selectStyle}>
                             <option value="">SELECT CONDITION</option>
                             <option value="New">New / Deadstock</option>
                             <option value="Used">Used / Worn</option>
@@ -125,12 +204,12 @@ const Sell = () => {
                 </div>
                 <div style={{...groupStyle, flex: 2}}>
                     <label style={labelStyle}>PRICE:</label>
-                    <input type="number" name="price" placeholder="0.00" onChange={handleChange} required style={inputStyle} />
+                    <input type="number" name="price" value={formData.price} placeholder="0.00" onChange={handleChange} required style={inputStyle} />
                 </div>
                 <div style={{...groupStyle, flex: 1}}>
                     <label style={labelStyle}>CURRENCY:</label>
                     <div style={selectWrapper}>
-                        <select name="currency" onChange={handleChange} style={selectStyle}>
+                        <select name="currency" value={formData.currency} onChange={handleChange} style={selectStyle}>
                             <option value="EUR">EUR (€)</option>
                             <option value="USD">USD ($)</option>
                             <option value="GBP">GBP (£)</option>
@@ -168,7 +247,7 @@ const Sell = () => {
 
             <div style={groupStyle}>
                 <label style={labelStyle}>DESCRIPTION:</label>
-                <textarea name="description" rows="4" placeholder="DETAILS..." onChange={handleChange} style={textareaStyle}></textarea>
+                <textarea name="description" value={formData.description} rows="4" placeholder="DETAILS..." onChange={handleChange} style={textareaStyle}></textarea>
             </div>
 
             <button type="submit" style={buttonStyle} disabled={loading}>
@@ -197,5 +276,6 @@ const fileUploadWrapper = { position: 'relative', height: '100px', border: '2px 
 const fileInput = { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', zIndex: 2 };
 const fileLabel = { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 };
 const buttonStyle = { width: '100%', padding: '18px', backgroundColor: '#111', color: '#fff', border: '2px solid #111', fontSize: '1rem', fontWeight: '900', letterSpacing: '2px', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'uppercase', marginTop: '10px' };
+const aiButtonStyle = { padding: '10px 15px', backgroundColor: '#b75784', color: '#fff', border: '2px solid #b75784', fontFamily: '"Lato", sans-serif', fontWeight: '900', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', boxShadow: '4px 4px 0px rgba(0,0,0,0.1)' };
 
 export default Sell;

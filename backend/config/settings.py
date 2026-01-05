@@ -201,9 +201,13 @@ else:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------- SUPABASE SETTINGS
 # SUPABASE SETTINGS
 SUPABASE_URL = config("SUPABASE_URL", default="")
 SUPABASE_KEY = config("SUPABASE_KEY", default="")
 # You can keep JWT_SECRET, but we won't use it for this new method
 SUPABASE_JWT_SECRET = config("SUPABASE_JWT_SECRET", default="")
+
+
+# -----------------------------------------------------------------------------# GEMINI API KEY
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
