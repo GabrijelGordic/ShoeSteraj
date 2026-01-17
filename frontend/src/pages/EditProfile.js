@@ -174,22 +174,18 @@ const EditProfile = () => {
     const uploadData = new FormData();
     uploadData.append('first_name', formData.first_name);
     uploadData.append('last_name', formData.last_name);
-    // Location and Phone usually go to the profile/user endpoint
+    uploadData.append('bio', formData.bio); 
     uploadData.append('location', fullLocation);
     uploadData.append('phone_number', fullPhoneNumber);
-    uploadData.append('bio', formData.bio);
 
     if (avatar) {
         uploadData.append('avatar', avatar);
     }
 
     try {
-      // NOTE: We patch to /auth/users/me/ assuming your UserSerializer (mapped to Profile) is set up.
-      // If this fails to save location, we might need to patch /api/profiles/ too.
-      // But usually, Djoser + Custom Serializer handles the write.
-      await api.patch('/auth/users/me/', uploadData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      // FIX: Do NOT set 'Content-Type': 'multipart/form-data' manually.
+      // Axios detects FormData and adds the correct boundary automatically.
+      await api.patch('/auth/users/me/', uploadData);
       
       setSuccessMsg('Details saved successfully.');
       setLoading(false);

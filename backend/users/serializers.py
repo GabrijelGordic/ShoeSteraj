@@ -132,3 +132,39 @@ class UserSerializer(BaseUserSerializer):
             
         profile.save()
         return instance
+
+
+# --- ADD THIS TO THE BOTTOM OF serializers.py ---
+
+class ManageProfileSerializer(serializers.ModelSerializer):
+    # Map User fields explicitly so we can write to them
+    username = serializers.CharField(source='user.username', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name')
+    last_name = serializers.CharField(source='user.last_name')
+
+    class Meta:
+        model = Profile
+        fields = [
+            'username', 'email', 'first_name', 'last_name', 
+            'bio', 'location', 'phone_number', 'avatar'
+        ]
+
+    def update(self, instance, validated_data):
+        # 1. Extract User data
+        user_data = validated_data.pop('user', {})
+        
+        # 2. Update User Model (First Name, Last Name)
+        user = instance.user
+        
+        # Only update if provided
+        if 'first_name' in user_data:
+            user.first_name = user_data['first_name']
+        if 'last_name' in user_data:
+            user.last_name = user_data['last_name']
+            
+        user.save()
+
+        # 3. Update Profile Model (Bio, Location, Phone, Avatar)
+        # instance is the Profile object. Standard DRF update handles the rest.
+        return super().update(instance, validated_data)
