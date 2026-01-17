@@ -102,9 +102,6 @@ const EditProfile = () => {
                 }
             })
             .catch(err => console.error("Error fetching profile:", err));
-    } else {
-        // Redirect if not logged in (handled by AuthContext generally, but good backup)
-        // navigate('/login');
     }
   }, [user]);
 
@@ -140,7 +137,9 @@ const EditProfile = () => {
 
   const renderAvatarPreview = () => {
       if (preview) return <img src={preview} alt="preview" style={avatarStyle} />;
-      return <div style={initialsAvatar}>{user?.username.charAt(0).toUpperCase()}</div>;
+      // FIX: Check if user exists before accessing username
+      const initial = user && user.username ? user.username.charAt(0).toUpperCase() : '?';
+      return <div style={initialsAvatar}>{initial}</div>;
   };
 
   // --- SUBMIT ---
@@ -206,6 +205,11 @@ const EditProfile = () => {
           setPassLoading(false);
       }
   };
+
+  // FIX: If user is not loaded yet, show loading instead of crashing
+  if (!user) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Account Settings...</div>;
+  }
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', padding: '60px 20px' }}>
