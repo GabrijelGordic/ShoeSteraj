@@ -4,9 +4,7 @@ import api from '../api/axios';
 import AuthContext from '../context/AuthContext';
 import { Country, City } from 'country-state-city';
 
-// Prevent re-creation of country list on re-renders
 const COUNTRIES_LIST = Country.getAllCountries().sort((a, b) => a.name.localeCompare(b.name));
-// Sort phone codes numerically
 const PHONE_CODES = [...COUNTRIES_LIST].sort((a, b) => parseInt(a.phonecode) - parseInt(b.phonecode));
 
 const EditProfile = () => {
@@ -15,7 +13,7 @@ const EditProfile = () => {
   
   // UI State
   const [loading, setLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false); // New state to track if we fetched data
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
   // Form State
@@ -47,62 +45,66 @@ const EditProfile = () => {
   });
   const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
 
-  // Memoize Cities to prevent lag
   const cities = useMemo(() => {
       return countryCode 
         ? City.getCitiesOfCountry(countryCode).sort((a, b) => a.name.localeCompare(b.name)) 
         : [];
   }, [countryCode]);
 
+  // --- CHANGED: FETCH FROM BOTH ENDPOINTS ---
   useEffect(() => {
-    // Only fetch if we have a user (logged in)
     if (user) {
-        // CHANGED: Fetch from /auth/users/me/ because your UserSerializer 
-        // contains ALL the fields (first_name, last_name, location, phone, bio).
+        // 1. Fetch Basic Identity (Names, Email) from Auth endpoint
         api.get('/auth/users/me/')
-            .then(res => {
-                const data = res.data;
+            .then(userRes => {
+                const userData = userRes.data;
+                const targetUsername = userData.username; // Use the username returned from API
+
+                // 2. Fetch Details (Location, Phone) from Profile endpoint
+                // We chain this to ensure we have the correct username
+                return api.get(`/api/profiles/${targetUsername}/`).then(profileRes => {
+                    return { userData, profileData: profileRes.data };
+                });
+            })
+            .then(({ userData, profileData }) => {
+                // --- MERGE DATA ---
                 
-                // 1. Populate Text Fields
+                // 1. Set Form Fields
                 setFormData({
-                    first_name: data.first_name || '',
-                    last_name: data.last_name || '',
-                    email: data.email || '',
-                    username: data.username || '',
-                    bio: data.bio || ''
+                    first_name: userData.first_name || '',
+                    last_name: userData.last_name || '',
+                    email: userData.email || '',
+                    username: userData.username || '',
+                    // Check both places for Bio (it is often in Profile)
+                    bio: profileData.bio || userData.bio || '' 
                 });
 
-                // 2. Populate Avatar
-                if (data.avatar) {
-                    setPreview(data.avatar);
+                // 2. Set Avatar (Prefer profile data)
+                if (profileData.avatar) {
+                    setPreview(profileData.avatar);
                 }
 
-                // 3. Populate Location (Parse "City, Country")
-                if (data.location) {
-                    const parts = data.location.split(',');
+                // 3. Set Location (From Profile Data)
+                if (profileData.location) {
+                    const parts = profileData.location.split(',');
                     if (parts.length >= 2) {
                         const existingCity = parts[0].trim();
                         const existingCountry = parts[1].trim();
                         
-                        // Find country object to get ISO Code (needed for city list)
                         const foundCountry = COUNTRIES_LIST.find(c => c.name === existingCountry);
-                        
                         if (foundCountry) {
                             setCountryCode(foundCountry.isoCode);
                             setCountryName(foundCountry.name);
                             setCity(existingCity);
-                            
-                            // Set default dial code if phone is missing
-                            if (!data.phone_number) setDialCode(foundCountry.phonecode);
+                            if (!profileData.phone_number) setDialCode(foundCountry.phonecode);
                         }
                     }
                 }
 
-                // 4. Populate Phone (Parse "+CodeDigits")
-                if (data.phone_number) {
-                    const raw = data.phone_number.replace('+', '');
-                    // Find which country code this number starts with
-                    // We reverse sort by length so we match "1242" before "1" to be accurate
+                // 4. Set Phone (From Profile Data)
+                if (profileData.phone_number) {
+                    const raw = profileData.phone_number.replace('+', '');
+                    // Sort by length (desc) to match longest country code first (e.g. 1242 vs 1)
                     const matchedCountry = PHONE_CODES
                         .sort((a,b) => b.phonecode.length - a.phonecode.length)
                         .find(c => raw.startsWith(c.phonecode));
@@ -114,12 +116,13 @@ const EditProfile = () => {
                         setPhoneDigits(raw);
                     }
                 }
-                
+
                 setDataLoaded(true);
             })
             .catch(err => {
                 console.error("Error fetching profile:", err);
-                // Optional: navigate('/login') if 401
+                // Even if profile fetch fails, show what we have
+                setDataLoaded(true);
             });
     }
   }, [user]);
@@ -156,12 +159,10 @@ const EditProfile = () => {
 
   const renderAvatarPreview = () => {
       if (preview) return <img src={preview} alt="preview" style={avatarStyle} />;
-      // Safe check for username to prevent crash
       const initial = formData.username ? formData.username.charAt(0).toUpperCase() : '?';
       return <div style={initialsAvatar}>{initial}</div>;
   };
 
-  // --- SUBMIT ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -173,29 +174,25 @@ const EditProfile = () => {
     const uploadData = new FormData();
     uploadData.append('first_name', formData.first_name);
     uploadData.append('last_name', formData.last_name);
-    // Usually email is read-only in Djoser, but if your setting allows update:
-    // uploadData.append('email', formData.email); 
-    uploadData.append('bio', formData.bio);
-    
-    // DRF UserSerializer expects these mapped to 'profile' via mapping, 
-    // but your PATCH endpoint likely handles flattened data if using the default Djoser endpoint structure,
-    // OR if you are using your custom ViewSet, ensure it accepts these fields.
-    // Based on serializers.py, the UserSerializer handles mapping automatically.
+    // Location and Phone usually go to the profile/user endpoint
     uploadData.append('location', fullLocation);
     uploadData.append('phone_number', fullPhoneNumber);
+    uploadData.append('bio', formData.bio);
 
     if (avatar) {
         uploadData.append('avatar', avatar);
     }
 
     try {
+      // NOTE: We patch to /auth/users/me/ assuming your UserSerializer (mapped to Profile) is set up.
+      // If this fails to save location, we might need to patch /api/profiles/ too.
+      // But usually, Djoser + Custom Serializer handles the write.
       await api.patch('/auth/users/me/', uploadData, {
           headers: { 'Content-Type': 'multipart/form-data' }
       });
       
       setSuccessMsg('Details saved successfully.');
       setLoading(false);
-      // Reload to reflect changes
       setTimeout(() => { window.location.reload(); }, 1000);
 
     } catch (err) {
@@ -232,7 +229,6 @@ const EditProfile = () => {
       }
   };
 
-  // Loading State
   if (!user || !dataLoaded) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Account Settings...</div>;
   }

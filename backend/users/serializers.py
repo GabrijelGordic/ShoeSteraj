@@ -25,7 +25,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = [
             'user_id', 'username', 'email', 'avatar', 'location', 
             'phone_number', 'is_verified', 'seller_rating',
-            'review_count', 'reviews_list'
+            'review_count', 'reviews_list','bio'
         ]
 
     def get_seller_rating(self, obj):
