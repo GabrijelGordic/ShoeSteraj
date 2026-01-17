@@ -5,5 +5,4 @@ class UsersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'users'
 
-    def ready(self):
-        import users.signals
+    # The ready() method is removed because signals.py is deleted.
