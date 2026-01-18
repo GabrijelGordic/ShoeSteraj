@@ -4,8 +4,7 @@ from .models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     reviewer_username = serializers.ReadOnlyField(source='reviewer.username')
-    
-    # Allow frontend to send 'seller_username' string instead of ID
+    # write_only means we receive it, but don't send it back
     seller_username = serializers.CharField(write_only=True) 
 
     class Meta:
@@ -16,6 +15,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
+        # Safety check if request is missing
+        if not request or not hasattr(request, 'user'):
+            raise serializers.ValidationError("Authentication required.")
+            
         user = request.user
         
         # 1. Resolve seller_username to actual User object
@@ -25,21 +28,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             raise serializers.ValidationError({"seller_username": "Seller not found."})
 
-        # 2. Check: Self-review
-        if seller == user:
+        # 2. Check: Self-review (Compare IDs to be safe)
+        if seller.pk == user.pk:
             raise serializers.ValidationError("You cannot review your own profile.")
 
         # 3. Check: Duplicate Review
         if Review.objects.filter(reviewer=user, seller=seller).exists():
             raise serializers.ValidationError("You have already reviewed this seller.")
 
-        # Store the resolved seller object in data for the create method
+        # Store seller object for create()
         data['seller'] = seller
         return data
 
     def create(self, validated_data):
-        # Remove the helper field 'seller_username'
+        # Remove helper field
         validated_data.pop('seller_username', None)
-        
-        # The 'seller' object was added in validate()
+        # Note: 'reviewer' comes from perform_create in views.py
         return Review.objects.create(**validated_data)

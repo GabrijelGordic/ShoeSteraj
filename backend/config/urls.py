@@ -8,9 +8,6 @@ from django.urls import re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Djoser Auth URLs
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
     path('api/', include('market.urls')),  # Include market app URLs
     path('api-auth/', include('rest_framework.urls')),  # DRF login/logout
     path('api/', include('reviews.urls')),  # Include reviews app URLs
