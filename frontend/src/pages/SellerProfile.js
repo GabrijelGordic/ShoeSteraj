@@ -69,8 +69,27 @@ const SellerProfile = () => {
   if (!profile) return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'80vh' }}>USER NOT FOUND.</div>;
 
   // --- FIX: ROBUST OWNERSHIP CHECK ---
-  // We use lowercase to ensure "User" and "user" match correctly
-  const isOwnProfile = user && profile && (user.username.toLowerCase() === profile.username.toLowerCase());
+  let currentUsername = null;
+  
+  if (user) {
+      // 1. Check top level (Django style)
+      if (user.username) {
+          currentUsername = user.username;
+      } 
+      // 2. Check metadata (Supabase style)
+      else if (user.user_metadata && user.user_metadata.username) {
+          currentUsername = user.user_metadata.username;
+      }
+      // 3. Fallback to email prefix if needed (optional)
+      else if (user.email) {
+          // currentUsername = user.email.split('@')[0]; 
+      }
+  }
+
+  // console.log("Current User:", currentUsername, "| Profile User:", profile.username); // Uncomment to debug
+
+  const isOwnProfile = profile && currentUsername && 
+      (currentUsername.toLowerCase() === profile.username.toLowerCase());
 
   return (
     <div style={{ backgroundColor: '#ffffff', minHeight: '100vh', padding: '60px 20px' }}>
@@ -119,7 +138,6 @@ const SellerProfile = () => {
         <div style={divider}></div>
 
         {/* --- REVIEW FORM --- */}
-        {/* FIX: Added !isOwnProfile check here too, just in case */}
         {!isOwnProfile && isReviewing && (
             <div style={reviewFormCard}>
                 <h3 style={{marginTop:0, fontFamily:'Bebas Neue', fontSize:'1.5rem'}}>LEAVE A REVIEW FOR @{profile.username}</h3>
